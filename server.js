@@ -52,10 +52,10 @@ app.post('/api/chat', async (req, res) => {
         if (Array.isArray(data) && data.length > 0) {
             // n8n returns an array - get the first item's response
             const firstItem = data[0];
-            responseText = firstItem.response || firstItem.message || firstItem.text || responseText;
+            responseText = firstItem.response || firstItem.output || firstItem.message || firstItem.text || responseText;
         } else if (data && typeof data === 'object') {
             // Direct object response
-            responseText = data.response || data.message || data.text || responseText;
+            responseText = data.response || data.output || data.message || data.text || responseText;
         }
         
         res.json({

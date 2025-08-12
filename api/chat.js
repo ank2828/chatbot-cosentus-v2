@@ -46,9 +46,9 @@ export default async function handler(req, res) {
         
         if (Array.isArray(data) && data.length > 0) {
             const firstItem = data[0];
-            responseText = firstItem.response || firstItem.message || firstItem.text || responseText;
+            responseText = firstItem.response || firstItem.output || firstItem.message || firstItem.text || responseText;
         } else if (data && typeof data === 'object') {
-            responseText = data.response || data.message || data.text || responseText;
+            responseText = data.response || data.output || data.message || data.text || responseText;
         }
 
         res.json({
