@@ -139,7 +139,15 @@ class ChatWidget {
     }
     
     closeChat() {
-        this.chatWindow.style.display = 'none';
+        // Add slide-down animation
+        this.chatWindow.classList.add('slide-down');
+        
+        // Wait for animation to complete before hiding
+        setTimeout(() => {
+            this.chatWindow.style.display = 'none';
+            this.chatWindow.classList.remove('slide-down');
+        }, 300); // Match the CSS animation duration
+        
         this.isOpen = false;
         
         // Show pulse again
@@ -308,7 +316,11 @@ class ChatWidget {
         
         const avatarDiv = document.createElement('div');
         avatarDiv.className = 'message-avatar';
-        avatarDiv.innerHTML = sender === 'bot' ? '<i class="fas fa-robot"></i>' : '<i class="fas fa-user"></i>';
+        avatarDiv.innerHTML = sender === 'bot' ? 
+            `<div class="ai-sparkles">
+                <span class="sparkle-text">✨</span>
+            </div>` : 
+            '<i class="fas fa-user"></i>';
         
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
@@ -346,7 +358,9 @@ class ChatWidget {
         typingDiv.className = 'message bot-message typing-indicator';
         typingDiv.innerHTML = `
             <div class="message-avatar">
-                <i class="fas fa-robot"></i>
+                <div class="ai-sparkles">
+                    <span class="sparkle-text">✨</span>
+                </div>
             </div>
             <div class="message-content">
                 <div class="loading-dots">
