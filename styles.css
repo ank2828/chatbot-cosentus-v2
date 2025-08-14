@@ -1212,13 +1212,13 @@ body {
     transform: none;
 }
 
-/* Custom Drag Cursors */
+/* Normal Drag Cursors */
 .drag-cursor {
-    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="%234f9cf9"/></svg>') 12 12, move;
+    cursor: move;
 }
 
 .drag-cursor-grabbing {
-    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="%237b68ee"/></svg>') 12 12, grabbing;
+    cursor: grabbing;
 }
 
 
