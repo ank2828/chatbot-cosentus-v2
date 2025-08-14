@@ -246,7 +246,7 @@ body {
 .logo-icon {
     width: 40px;
     height: 40px;
-    background: linear-gradient(135deg, #01B2D6, #08173A);
+    background: #01B2D6;
     border-radius: 10px;
     display: flex;
     align-items: center;
@@ -276,7 +276,7 @@ body {
     left: 0;
     width: 0;
     height: 2px;
-    background: linear-gradient(135deg, #01B2D6, #08173A);
+    background: #01B2D6;
     transition: width 0.3s ease;
 }
 
@@ -291,7 +291,7 @@ body {
 .nav-cta {
     padding: 0.75rem 1.5rem;
     font-weight: 600;
-    background: linear-gradient(135deg, #01B2D6, #08173A);
+    background: #01B2D6;
     border: none;
 }
 
@@ -362,7 +362,7 @@ body {
 
 .primary-button {
     padding: 1rem 2rem;
-    background: linear-gradient(135deg, #01B2D6, #08173A);
+    background: #01B2D6;
     border: none;
     font-weight: 600;
     font-size: 1rem;
@@ -386,7 +386,7 @@ body {
 .stat-number {
     font-size: 2.5rem;
     font-weight: 800;
-    color: #01B2D6;
+    color: #FFFFFF;
     line-height: 1;
 }
 
@@ -448,7 +448,7 @@ body {
 .metric-icon {
     width: 50px;
     height: 50px;
-    background: linear-gradient(135deg, #01B2D6, #08173A);
+    background: #01B2D6;
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -505,7 +505,7 @@ body {
 
 .bar {
     flex: 1;
-    background: linear-gradient(135deg, #01B2D6, #08173A);
+    background: #01B2D6;
     border-radius: 4px 4px 0 0;
     transition: all 0.3s ease;
 }
@@ -561,7 +561,7 @@ body {
     top: -10px;
     left: 50%;
     transform: translateX(-50%);
-    background: linear-gradient(135deg, #01B2D6, #08173A);
+    background: #01B2D6;
     padding: 0.5rem 1rem;
     border-radius: 20px;
     font-size: 0.75rem;
@@ -588,7 +588,7 @@ body {
 .service-icon {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, #01B2D6, #08173A);
+    background: #01B2D6;
     border-radius: 20px;
     display: flex;
     align-items: center;
@@ -675,7 +675,7 @@ body {
 .highlight-icon {
     width: 50px;
     height: 50px;
-    background: linear-gradient(135deg, #01B2D6, #08173A);
+    background: #01B2D6;
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -730,7 +730,7 @@ body {
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(135deg, #01B2D6, #08173A);
+    background: #01B2D6;
     border-radius: 4px;
     transition: width 2s ease;
 }
@@ -761,7 +761,7 @@ body {
 .cta-icon {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, #01B2D6, #08173A);
+    background: #01B2D6;
     border-radius: 20px;
     display: flex;
     align-items: center;
@@ -793,7 +793,7 @@ body {
 
 .cta-primary {
     padding: 1rem 2rem;
-    background: linear-gradient(135deg, #01B2D6, #08173A);
+    background: #01B2D6;
     border: none;
     font-weight: 600;
     font-size: 1rem;
@@ -938,7 +938,7 @@ body {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #01B2D6, #08173A);
+    background: #01B2D6;
     border: none;
     cursor: pointer;
     position: relative;
@@ -963,7 +963,7 @@ body {
     right: -3px;
     bottom: -3px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #01B2D6, #08173A);
+    background: #01B2D6;
     opacity: 0.7;
     animation: pulse 2s infinite;
 }
@@ -989,7 +989,7 @@ body {
     right: 0;
     width: 350px;
     height: 500px;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.15);
@@ -1023,7 +1023,7 @@ body {
 .chat-avatar {
     width: 40px;
     height: 40px;
-    background: linear-gradient(135deg, #01B2D6, #08173A);
+    background: #01B2D6;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -1126,7 +1126,7 @@ body {
 }
 
 .bot-message .message-avatar {
-    background: linear-gradient(135deg, #01B2D6, #08173A);
+    background: #01B2D6;
     color: #ffffff;
 }
 
@@ -1143,7 +1143,7 @@ body {
 }
 
 .user-message .message-content {
-    background: linear-gradient(135deg, #01B2D6, #08173A);
+    background: #01B2D6;
 }
 
 .message-content p {
@@ -1189,7 +1189,7 @@ body {
 .chat-send {
     width: 40px;
     height: 40px;
-    background: linear-gradient(135deg, #01B2D6, #08173A);
+    background: #01B2D6;
     border: none;
     border-radius: 8px;
     color: #ffffff;
