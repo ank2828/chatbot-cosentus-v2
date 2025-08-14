@@ -11,7 +11,7 @@ html {
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(135deg, #0a1428 0%, #1a2332 25%, #2d3748 50%, #1a2332 75%, #0a1428 100%);
+    background: linear-gradient(135deg, #08173A 0%, #08173A 25%, #01B2D6 50%, #08173A 75%, #08173A 100%);
     color: #ffffff;
     overflow-x: hidden;
     min-height: 100vh;
@@ -40,7 +40,7 @@ body {
     position: absolute;
     border-radius: 50%;
     opacity: 0.05;
-    background: linear-gradient(135deg, #4f9cf9 0%, #7b68ee 50%, #ff6b6b 100%);
+    background: linear-gradient(135deg, #01B2D6 0%, #08173A 50%, #01B2D6 100%);
     animation: float 20s ease-in-out infinite;
 }
 
@@ -109,8 +109,8 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle at 20% 80%, rgba(79, 156, 249, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(123, 104, 238, 0.1) 0%, transparent 50%),
+    background: radial-gradient(circle at 20% 80%, rgba(1, 178, 214, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(8, 23, 58, 0.1) 0%, transparent 50%),
                 radial-gradient(circle at 40% 40%, rgba(255, 107, 107, 0.1) 0%, transparent 50%);
 }
 
@@ -171,8 +171,8 @@ body {
 .glass-button:hover {
     background: rgba(255, 255, 255, 0.15);
     transform: translateY(-2px);
-    box-shadow: 0 10px 40px rgba(79, 156, 249, 0.3);
-    border-color: rgba(79, 156, 249, 0.5);
+    box-shadow: 0 10px 40px rgba(1, 178, 214, 0.3);
+    border-color: rgba(1, 178, 214, 0.5);
 }
 
 .glass-button:hover::before {
@@ -190,10 +190,10 @@ body {
 }
 
 .glass-badge {
-    background: rgba(79, 156, 249, 0.2);
+    background: rgba(1, 178, 214, 0.2);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
-    border: 1px solid rgba(79, 156, 249, 0.3);
+    border: 1px solid rgba(1, 178, 214, 0.3);
     border-radius: 50px;
     padding: 0.5rem 1rem;
     display: inline-flex;
@@ -201,7 +201,7 @@ body {
     gap: 0.5rem;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #4f9cf9;
+    color: #01B2D6;
 }
 
 /* Container */
@@ -218,7 +218,7 @@ body {
     left: 0;
     right: 0;
     z-index: 1000;
-    background: rgba(10, 20, 40, 0.8);
+    background: rgba(8, 23, 58, 0.8);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -246,7 +246,7 @@ body {
 .logo-icon {
     width: 40px;
     height: 40px;
-    background: linear-gradient(135deg, #4f9cf9, #7b68ee);
+    background: linear-gradient(135deg, #01B2D6, #08173A);
     border-radius: 10px;
     display: flex;
     align-items: center;
@@ -276,12 +276,12 @@ body {
     left: 0;
     width: 0;
     height: 2px;
-    background: linear-gradient(135deg, #4f9cf9, #7b68ee);
+    background: linear-gradient(135deg, #01B2D6, #08173A);
     transition: width 0.3s ease;
 }
 
 .nav-link:hover {
-    color: #4f9cf9;
+    color: #01B2D6;
 }
 
 .nav-link:hover::after {
@@ -291,7 +291,7 @@ body {
 .nav-cta {
     padding: 0.75rem 1.5rem;
     font-weight: 600;
-    background: linear-gradient(135deg, #4f9cf9, #7b68ee);
+    background: linear-gradient(135deg, #01B2D6, #08173A);
     border: none;
 }
 
@@ -341,7 +341,7 @@ body {
 }
 
 .gradient-text {
-    background: linear-gradient(135deg, #4f9cf9 0%, #7b68ee 50%, #ff6b6b 100%);
+    background: linear-gradient(135deg, #01B2D6 0%, #08173A 50%, #01B2D6 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -362,7 +362,7 @@ body {
 
 .primary-button {
     padding: 1rem 2rem;
-    background: linear-gradient(135deg, #4f9cf9, #7b68ee);
+    background: linear-gradient(135deg, #01B2D6, #08173A);
     border: none;
     font-weight: 600;
     font-size: 1rem;
@@ -386,7 +386,7 @@ body {
 .stat-number {
     font-size: 2.5rem;
     font-weight: 800;
-    color: #4f9cf9;
+    color: #01B2D6;
     line-height: 1;
 }
 
@@ -448,7 +448,7 @@ body {
 .metric-icon {
     width: 50px;
     height: 50px;
-    background: linear-gradient(135deg, #4f9cf9, #7b68ee);
+    background: linear-gradient(135deg, #01B2D6, #08173A);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -505,7 +505,7 @@ body {
 
 .bar {
     flex: 1;
-    background: linear-gradient(135deg, #4f9cf9, #7b68ee);
+    background: linear-gradient(135deg, #01B2D6, #08173A);
     border-radius: 4px 4px 0 0;
     transition: all 0.3s ease;
 }
@@ -552,7 +552,7 @@ body {
 }
 
 .service-card.featured {
-    border: 2px solid rgba(79, 156, 249, 0.3);
+    border: 2px solid rgba(1, 178, 214, 0.3);
     transform: scale(1.05);
 }
 
@@ -561,7 +561,7 @@ body {
     top: -10px;
     left: 50%;
     transform: translateX(-50%);
-    background: linear-gradient(135deg, #4f9cf9, #7b68ee);
+    background: linear-gradient(135deg, #01B2D6, #08173A);
     padding: 0.5rem 1rem;
     border-radius: 20px;
     font-size: 0.75rem;
@@ -574,7 +574,7 @@ body {
 
 .service-card:hover {
     transform: translateY(-10px);
-    border-color: rgba(79, 156, 249, 0.5);
+    border-color: rgba(1, 178, 214, 0.5);
 }
 
 .service-card.featured:hover {
@@ -588,7 +588,7 @@ body {
 .service-icon {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, #4f9cf9, #7b68ee);
+    background: linear-gradient(135deg, #01B2D6, #08173A);
     border-radius: 20px;
     display: flex;
     align-items: center;
@@ -624,7 +624,7 @@ body {
 }
 
 .feature-item i {
-    color: #4f9cf9;
+    color: #01B2D6;
     font-size: 1.1rem;
 }
 
@@ -675,7 +675,7 @@ body {
 .highlight-icon {
     width: 50px;
     height: 50px;
-    background: linear-gradient(135deg, #4f9cf9, #7b68ee);
+    background: linear-gradient(135deg, #01B2D6, #08173A);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -730,14 +730,14 @@ body {
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(135deg, #4f9cf9, #7b68ee);
+    background: linear-gradient(135deg, #01B2D6, #08173A);
     border-radius: 4px;
     transition: width 2s ease;
 }
 
 .progress-value {
     font-weight: 600;
-    color: #4f9cf9;
+    color: #01B2D6;
     font-size: 0.9rem;
     text-align: right;
 }
@@ -761,7 +761,7 @@ body {
 .cta-icon {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, #4f9cf9, #7b68ee);
+    background: linear-gradient(135deg, #01B2D6, #08173A);
     border-radius: 20px;
     display: flex;
     align-items: center;
@@ -793,7 +793,7 @@ body {
 
 .cta-primary {
     padding: 1rem 2rem;
-    background: linear-gradient(135deg, #4f9cf9, #7b68ee);
+    background: linear-gradient(135deg, #01B2D6, #08173A);
     border: none;
     font-weight: 600;
     font-size: 1rem;
@@ -821,14 +821,14 @@ body {
 }
 
 .cta-feature i {
-    color: #4f9cf9;
+    color: #01B2D6;
 }
 
 /* Footer */
 .footer {
     padding: 3rem 0 1rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(10, 20, 40, 0.5);
+    background: rgba(8, 23, 58, 0.5);
 }
 
 .footer-content {
@@ -895,7 +895,7 @@ body {
 }
 
 .footer-column a:hover {
-    color: #4f9cf9;
+    color: #01B2D6;
 }
 
 .footer-bottom {
@@ -923,7 +923,7 @@ body {
 }
 
 .footer-legal a:hover {
-    color: #4f9cf9;
+    color: #01B2D6;
 }
 
 /* Chat Widget */
@@ -938,7 +938,7 @@ body {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #4f9cf9, #7b68ee);
+    background: linear-gradient(135deg, #01B2D6, #08173A);
     border: none;
     cursor: pointer;
     position: relative;
@@ -946,14 +946,14 @@ body {
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
-    box-shadow: 0 5px 20px rgba(79, 156, 249, 0.4);
+    box-shadow: 0 5px 20px rgba(1, 178, 214, 0.4);
     font-size: 1.5rem;
     color: #ffffff;
 }
 
 .chat-button:hover {
     transform: scale(1.1);
-    box-shadow: 0 8px 30px rgba(79, 156, 249, 0.6);
+    box-shadow: 0 8px 30px rgba(1, 178, 214, 0.6);
 }
 
 .chat-pulse {
@@ -963,7 +963,7 @@ body {
     right: -3px;
     bottom: -3px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #4f9cf9, #7b68ee);
+    background: linear-gradient(135deg, #01B2D6, #08173A);
     opacity: 0.7;
     animation: pulse 2s infinite;
 }
@@ -1023,7 +1023,7 @@ body {
 .chat-avatar {
     width: 40px;
     height: 40px;
-    background: linear-gradient(135deg, #4f9cf9, #7b68ee);
+    background: linear-gradient(135deg, #01B2D6, #08173A);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -1126,7 +1126,7 @@ body {
 }
 
 .bot-message .message-avatar {
-    background: linear-gradient(135deg, #4f9cf9, #7b68ee);
+    background: linear-gradient(135deg, #01B2D6, #08173A);
     color: #ffffff;
 }
 
@@ -1143,7 +1143,7 @@ body {
 }
 
 .user-message .message-content {
-    background: linear-gradient(135deg, #4f9cf9, #7b68ee);
+    background: linear-gradient(135deg, #01B2D6, #08173A);
 }
 
 .message-content p {
@@ -1182,14 +1182,14 @@ body {
 
 #chatInput:focus {
     outline: none;
-    border-color: #4f9cf9;
+    border-color: #01B2D6;
     background: rgba(255, 255, 255, 0.15);
 }
 
 .chat-send {
     width: 40px;
     height: 40px;
-    background: linear-gradient(135deg, #4f9cf9, #7b68ee);
+    background: linear-gradient(135deg, #01B2D6, #08173A);
     border: none;
     border-radius: 8px;
     color: #ffffff;
@@ -1203,7 +1203,7 @@ body {
 
 .chat-send:hover {
     transform: scale(1.05);
-    box-shadow: 0 3px 15px rgba(79, 156, 249, 0.4);
+    box-shadow: 0 3px 15px rgba(1, 178, 214, 0.4);
 }
 
 .chat-send:disabled {
@@ -1405,7 +1405,7 @@ a:visited {
 }
 
 a:hover {
-    color: #4f9cf9 !important;
+    color: #01B2D6 !important;
     opacity: 0.8;
 }
 
@@ -1421,7 +1421,7 @@ a:hover {
 }
 
 .message-content a:hover {
-    color: #4f9cf9 !important;
+    color: #01B2D6 !important;
     text-decoration: underline;
 }
 
@@ -1433,7 +1433,7 @@ a:hover {
 
 .footer-column a:hover,
 .footer-legal a:hover {
-    color: #4f9cf9 !important;
+    color: #01B2D6 !important;
 }
 
 /* Chat Logo Styling */

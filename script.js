@@ -446,10 +446,10 @@ function initNavbarEffects() {
         
         // Change navbar background based on scroll
         if (currentScrollY > 100) {
-            navbar.style.background = 'rgba(10, 20, 40, 0.95)';
-            navbar.style.borderBottom = '1px solid rgba(79, 156, 249, 0.2)';
+            navbar.style.background = 'rgba(8, 23, 58, 0.95)';
+            navbar.style.borderBottom = '1px solid rgba(1, 178, 214, 0.2)';
         } else {
-            navbar.style.background = 'rgba(10, 20, 40, 0.8)';
+            navbar.style.background = 'rgba(8, 23, 58, 0.8)';
             navbar.style.borderBottom = '1px solid rgba(255, 255, 255, 0.1)';
         }
         
@@ -510,7 +510,7 @@ function initServiceCardEffects() {
     document.querySelectorAll('.service-card').forEach(card => {
         card.addEventListener('mouseenter', function() {
             this.style.transform = 'translateY(-15px) scale(1.02)';
-            this.style.boxShadow = '0 20px 60px rgba(79, 156, 249, 0.2)';
+            this.style.boxShadow = '0 20px 60px rgba(1, 178, 214, 0.2)';
         });
         
         card.addEventListener('mouseleave', function() {
@@ -593,7 +593,7 @@ function initParticleEffect() {
         draw() {
             ctx.save();
             ctx.globalAlpha = this.opacity;
-            ctx.fillStyle = '#4f9cf9';
+            ctx.fillStyle = '#01B2D6';
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
             ctx.fill();
