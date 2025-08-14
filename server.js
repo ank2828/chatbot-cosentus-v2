@@ -34,6 +34,7 @@ app.post('/api/chat', async (req, res) => {
                 message: req.body.message,
                 timestamp: req.body.timestamp,
                 userId: req.body.userId,
+                sessionId: req.body.sessionId, // Pass through session ID for n8n memory
                 context: req.body.context,
                 source: 'landing-page-chat'
             })

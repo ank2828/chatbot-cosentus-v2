@@ -286,6 +286,7 @@ class ChatWidget {
                 message: message,
                 timestamp: new Date().toISOString(),
                 userId: this.getUserId(),
+                sessionId: this.getSessionId(), // Unique session ID that resets on page refresh
                 context: {
                     page: 'landing-page',
                     previousMessages: this.messages.slice(-3) // Last 3 messages for context
@@ -392,6 +393,15 @@ class ChatWidget {
             localStorage.setItem('chatUserId', userId);
         }
         return userId;
+    }
+    
+    getSessionId() {
+        // Generate unique session ID that resets on page refresh
+        // This ensures each browser session has isolated chat memory
+        if (!this.sessionId) {
+            this.sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+        return this.sessionId;
     }
     
     trackEvent(eventName, properties = {}) {
