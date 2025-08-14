@@ -400,6 +400,7 @@ class ChatWidget {
         // This ensures each browser session has isolated chat memory
         if (!this.sessionId) {
             this.sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            console.log('🆕 New chat session started:', this.sessionId);
         }
         return this.sessionId;
     }

@@ -18,6 +18,7 @@ export default async function handler(req, res) {
         const webhookUrl = 'https://thunderbird-labs.app.n8n.cloud/webhook/08176b32-96eb-482d-8fe8-afbc7d957755';
         
         console.log('Received chat message:', req.body);
+        console.log('Session ID being sent to n8n:', req.body.sessionId);
         
         const fetch = (await import('node-fetch')).default;
         
@@ -32,7 +33,9 @@ export default async function handler(req, res) {
                 userId: req.body.userId,
                 sessionId: req.body.sessionId, // Pass through session ID for n8n memory
                 context: req.body.context,
-                source: 'landing-page-chat'
+                source: 'landing-page-chat',
+                clearMemory: req.body.sessionId && req.body.sessionId.includes('session_'), // Signal to clear memory for new sessions
+                memoryKey: req.body.sessionId || `fallback_${Date.now()}` // Fallback memory key
             })
         });
 

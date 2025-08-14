@@ -1392,3 +1392,46 @@ body {
         font-size: 1.5rem;
     }
 }
+
+/* Global Link Styles - Make all links white and readable */
+a {
+    color: #ffffff !important;
+    text-decoration: underline;
+    transition: color 0.3s ease, opacity 0.3s ease;
+}
+
+a:visited {
+    color: #ffffff !important;
+}
+
+a:hover {
+    color: #4f9cf9 !important;
+    opacity: 0.8;
+}
+
+/* Chat Message Links - Ensure they're always white and readable */
+.message-content a {
+    color: #ffffff !important;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.message-content a:visited {
+    color: #ffffff !important;
+}
+
+.message-content a:hover {
+    color: #4f9cf9 !important;
+    text-decoration: underline;
+}
+
+/* Footer Links - Override existing styles */
+.footer-column a,
+.footer-legal a {
+    color: #ffffff !important;
+}
+
+.footer-column a:hover,
+.footer-legal a:hover {
+    color: #4f9cf9 !important;
+}
