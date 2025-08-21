@@ -314,19 +314,10 @@ class ChatWidget {
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${sender}-message`;
         
-        const avatarDiv = document.createElement('div');
-        avatarDiv.className = 'message-avatar';
-        avatarDiv.innerHTML = sender === 'bot' ? 
-            `<div class="ai-sparkles">
-                <span class="sparkle-text">✨</span>
-            </div>` : 
-            '<i class="fas fa-user"></i>';
-        
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
         contentDiv.innerHTML = `<p>${this.formatMessage(text)}</p>`;
         
-        messageDiv.appendChild(avatarDiv);
         messageDiv.appendChild(contentDiv);
         
         this.chatMessages.appendChild(messageDiv);
@@ -357,11 +348,6 @@ class ChatWidget {
         const typingDiv = document.createElement('div');
         typingDiv.className = 'message bot-message typing-indicator';
         typingDiv.innerHTML = `
-            <div class="message-avatar">
-                <div class="ai-sparkles">
-                    <span class="sparkle-text">✨</span>
-                </div>
-            </div>
             <div class="message-content">
                 <div class="loading-dots">
                     <span></span>
@@ -458,13 +444,13 @@ function initNavbarEffects() {
     window.addEventListener('scroll', () => {
         const currentScrollY = window.scrollY;
         
-        // Change navbar background based on scroll
+        // Change navbar background based on scroll - keep cyan color
         if (currentScrollY > 100) {
-            navbar.style.background = 'rgba(8, 23, 58, 0.95)';
-            navbar.style.borderBottom = '1px solid rgba(1, 178, 214, 0.2)';
+            navbar.style.background = '#01B2D6';
+            navbar.style.borderBottom = '1px solid rgba(255, 255, 255, 0.3)';
         } else {
-            navbar.style.background = 'rgba(8, 23, 58, 0.8)';
-            navbar.style.borderBottom = '1px solid rgba(255, 255, 255, 0.1)';
+            navbar.style.background = '#01B2D6';
+            navbar.style.borderBottom = '1px solid rgba(255, 255, 255, 0.2)';
         }
         
         // Hide/show navbar on scroll
