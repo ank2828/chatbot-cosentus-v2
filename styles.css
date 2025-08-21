@@ -1054,8 +1054,24 @@ body {
     line-height: 1;
 }
 
-.chat-close:hover {
-    color: rgba(255, 255, 255, 0.7);
+.menu-dots {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+}
+
+.menu-dots .dot {
+    width: 4px;
+    height: 4px;
+    background-color: #FFFFFF;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.chat-close:hover .menu-dots .dot {
+    background-color: rgba(255, 255, 255, 0.85);
 }
 
 .chat-messages {
@@ -1456,9 +1472,9 @@ a:hover {
 
 /* Chat Logo Styling */
 .chat-logo {
-    max-height: 32px;
+    max-height: 40px;
     width: auto;
-    max-width: 140px;
+    max-width: 160px;
     object-fit: contain;
     margin-bottom: 0.25rem;
     filter: brightness(1.1);
@@ -1469,9 +1485,10 @@ a:hover {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.25rem;
+    gap: 0.15rem;
     flex: 1;
-    padding-left: 1rem;
+    padding-left: 0.15rem;
+    padding-top: 0.15rem;
 }
 
 .chat-info p {
