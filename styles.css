@@ -955,11 +955,11 @@ body {
     bottom: 80px;
     right: 0;
     width: 350px;
-    height: 500px;
+    height: 600px;
     background: rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: none;
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     display: none;
@@ -1001,9 +1001,7 @@ body {
     align-items: center;
     gap: 0.75rem;
     border-radius: 16px 16px 0 0;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: #000000;
 }
 
 .chat-avatar {
@@ -1024,15 +1022,16 @@ body {
 }
 
 .chat-info h4 {
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 1.1rem;
+    font-weight: 500;
     color: #ffffff;
     margin: 0 0 0.25rem 0;
 }
 
 .chat-info p {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.9);
     margin: 0;
 }
 
@@ -1042,8 +1041,7 @@ body {
     right: 12px;
     width: 28px;
     height: 28px;
-    border-radius: 50%;
-    background: #01B2D6;
+    background: none;
     border: none;
     color: #FFFFFF;
     cursor: pointer;
@@ -1051,12 +1049,12 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
+    font-size: 1rem;
     line-height: 1;
 }
 
 .chat-close:hover {
-    background: #0195B6;
+    color: rgba(255, 255, 255, 0.7);
     transform: scale(1.1);
 }
 
@@ -1068,6 +1066,7 @@ body {
     flex-direction: column;
     gap: 0.5rem;
     align-items: stretch;
+    background: #FFFFFF;
 }
 
 .chat-messages::-webkit-scrollbar {
@@ -1079,7 +1078,7 @@ body {
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.2);
     border-radius: 2px;
 }
 
@@ -1126,13 +1125,13 @@ body {
 
 /* Bot message styling (left side - like received messages) */
 .bot-message .message-content {
-    background: rgba(255, 255, 255, 0.95);
-    color: #333333;
+    background: #E5E5E5;
+    color: #000000;
 }
 
 /* User message styling (right side - like sent messages) */
 .user-message .message-content {
-    background: #01B2D6;
+    background: #000000;
     color: #ffffff;
 }
 
@@ -1143,7 +1142,7 @@ body {
 }
 
 .bot-message .message-content p {
-    color: #333333;
+    color: #000000;
 }
 
 .user-message .message-content p {
@@ -1167,8 +1166,8 @@ body {
 
 #chatInput {
     width: 100%;
-    background: rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: #FFFFFF;
+    border: 1px solid rgba(0, 0, 0, 0.2);
     border-radius: 24px;
     padding: 1rem 3.5rem 1rem 1rem;
     color: #000000;
@@ -1184,7 +1183,8 @@ body {
 }
 
 #chatInput:focus {
-    background: rgba(0, 0, 0, 0.08);
+    background: #FFFFFF;
+    border-color: rgba(0, 0, 0, 0.3);
 }
 
 .chat-send {
@@ -1194,10 +1194,10 @@ body {
     transform: translateY(-50%);
     width: 32px;
     height: 32px;
-    background: rgba(1, 178, 214, 0.2);
+    background: rgba(0, 0, 0, 0.1);
     border: none;
     border-radius: 50%;
-    color: #01B2D6;
+    color: #000000;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -1207,8 +1207,8 @@ body {
 }
 
 .chat-send:hover {
-    background: rgba(1, 178, 214, 0.3);
-    transform: translateY(-50%) scale(1.1);
+    background: rgba(0, 0, 0, 0.2);
+    transform: translateY(-50%) scale(1.05);
 }
 
 .chat-send:disabled {
@@ -1368,7 +1368,7 @@ body {
     
     .chat-window {
         width: calc(100vw - 40px);
-        height: 500px;
+        height: 600px;
         right: 20px;
         left: 20px;
         bottom: 90px;
@@ -1463,7 +1463,8 @@ a:hover {
 
 .chat-info p {
     margin: 0;
-    font-size: 0.8rem;
-    opacity: 0.8;
-    color: #000000;
+    font-size: 0.9rem;
+    font-weight: 400;
+    opacity: 0.9;
+    color: #ffffff;
 }
