@@ -316,7 +316,18 @@ class ChatWidget {
         
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
-        contentDiv.innerHTML = `<p>${this.formatMessage(text)}</p>`;
+        
+        if (sender === 'bot') {
+            contentDiv.innerHTML = `
+                <div class="agent-title">
+                    <img src="lion_transparent.png" alt="Cosentus Logo" class="agent-logo">
+                    Cosentus AI Agent
+                </div>
+                <p>${this.formatMessage(text)}</p>
+            `;
+        } else {
+            contentDiv.innerHTML = `<p>${this.formatMessage(text)}</p>`;
+        }
         
         messageDiv.appendChild(contentDiv);
         
@@ -349,6 +360,10 @@ class ChatWidget {
         typingDiv.className = 'message bot-message typing-indicator';
         typingDiv.innerHTML = `
             <div class="message-content">
+                <div class="agent-title">
+                    <img src="lion_transparent.png" alt="Cosentus Logo" class="agent-logo">
+                    Cosentus AI Agent
+                </div>
                 <div class="loading-dots">
                     <span></span>
                     <span></span>
