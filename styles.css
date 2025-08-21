@@ -1054,8 +1054,24 @@ body {
     line-height: 1;
 }
 
-.chat-close:hover {
-    color: rgba(255, 255, 255, 0.7);
+.menu-dots {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+}
+
+.menu-dots .dot {
+    width: 4px;
+    height: 4px;
+    background-color: #FFFFFF;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.chat-close:hover .menu-dots .dot {
+    background-color: rgba(255, 255, 255, 0.85);
 }
 
 .chat-messages {
