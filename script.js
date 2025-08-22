@@ -1,4 +1,4 @@
-// Enhanced Chat Widget with glassmorphism design
+// Enhanced Chat Widget with modern design
 class ChatWidget {
     constructor() {
         this.isOpen = false;
