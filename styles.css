@@ -1023,18 +1023,7 @@ body {
     background: #000000;
 }
 
-.chat-avatar {
-    width: 40px;
-    height: 40px;
-    background: #01B2D6;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ffffff;
-    font-size: 1rem;
-    flex-shrink: 0;
-}
+
 
 .chat-info {
     flex: 1;
@@ -1421,9 +1410,7 @@ body {
         bottom: 90px;
     }
     
-    .chat-notification {
-        display: none;
-    }
+
 }
 
 @media (max-width: 480px) {
@@ -1440,9 +1427,7 @@ body {
         height: 60px;
     }
     
-    .chat-icon {
-        font-size: 1.5rem;
-    }
+
 }
 
 /* Global Link Styles - Make all links white and readable */
@@ -1461,19 +1446,19 @@ a:hover {
     opacity: 0.8;
 }
 
-/* Chat Message Links - Ensure they're always white and readable */
+/* Chat Message Links - Make them blue and readable */
 .message-content a {
-    color: #ffffff !important;
+    color: #0066cc !important;
     text-decoration: underline;
     font-weight: 500;
 }
 
 .message-content a:visited {
-    color: #ffffff !important;
+    color: #0066cc !important;
 }
 
 .message-content a:hover {
-    color: #01B2D6 !important;
+    color: #004499 !important;
     text-decoration: underline;
 }
 

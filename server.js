@@ -64,6 +64,7 @@ app.post('/api/chat', async (req, res) => {
             timestamp: new Date().toISOString(),
             status: 'success'
         });
+
         
     } catch (error) {
         console.error('Webhook error:', error);
@@ -76,7 +77,7 @@ app.post('/api/chat', async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`🚀 Medical RCM Landing Page running at http://localhost:${PORT}`);
-    console.log('🎨 Beautiful glassmorphism design ready!');
+    console.log('🎨 Beautiful modern design ready!');
     console.log('💬 Chat widget with n8n webhook integration active');
     console.log('Press Ctrl+C to stop the server');
 });

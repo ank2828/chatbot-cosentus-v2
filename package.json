@@ -1,7 +1,7 @@
 {
   "name": "medical-rcm-landing",
   "version": "1.0.0",
-  "description": "Modern glassmorphism landing page for medical RCM company with AI chatbot",
+  "description": "Modern landing page for medical RCM company with AI chatbot",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -12,7 +12,7 @@
     "cors": "^2.8.5",
     "node-fetch": "^3.3.0"
   },
-  "keywords": ["medical", "rcm", "landing-page", "chatbot", "glassmorphism"],
+  "keywords": ["medical", "rcm", "landing-page", "chatbot", "modern-design"],
   "author": "Cosentus LLC",
   "license": "MIT"
 }

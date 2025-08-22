@@ -9,8 +9,6 @@ class ChatWidget {
         this.attachEventListeners();
         this.setupAnimations();
         this.setupDragFunctionality();
-
-        this.showWelcomeNotification();
     }
     
     initializeElements() {
@@ -108,11 +106,7 @@ class ChatWidget {
         }, 16);
     }
     
-    showWelcomeNotification() {
-        // Simple welcome notification functionality
-        console.log('Chat widget initialized and ready');
-    }
-    
+
     toggleChat() {
         if (this.isOpen) {
             this.closeChat();
@@ -367,10 +361,17 @@ class ChatWidget {
     
     formatMessage(text) {
         // Basic markdown support for links and emphasis
-        return text
+        let formatted = text
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+            .replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        // Convert markdown links [text](url) first
+        formatted = formatted.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+        
+        // Then convert plain URLs that aren't already inside HTML tags
+        formatted = formatted.replace(/(^|[^"'>])(https?:\/\/[^\s<>"']+)/gi, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+        
+        return formatted;
     }
     
 
@@ -438,16 +439,13 @@ class ChatWidget {
         // This ensures each browser session has isolated chat memory
         if (!this.sessionId) {
             this.sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            console.log('🆕 New chat session started:', this.sessionId);
+
         }
         return this.sessionId;
     }
     
     trackEvent(eventName, properties = {}) {
         // Analytics tracking (implement with your preferred analytics service)
-        console.log('Analytics Event:', eventName, properties);
-        
-        // Example: Google Analytics 4
         if (typeof gtag !== 'undefined') {
             gtag('event', eventName, {
                 event_category: 'chat_widget',
@@ -584,105 +582,7 @@ function initScrollAnimations() {
     });
 }
 
-// Particle background effect (optional enhancement)
-function initParticleEffect() {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    canvas.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: -1;
-        opacity: 0.3;
-    `;
-    
-    document.body.appendChild(canvas);
-    
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    
-    const particles = [];
-    const particleCount = 50;
-    
-    class Particle {
-        constructor() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.vx = (Math.random() - 0.5) * 0.5;
-            this.vy = (Math.random() - 0.5) * 0.5;
-            this.size = Math.random() * 2 + 1;
-            this.opacity = Math.random() * 0.5 + 0.2;
-        }
-        
-        update() {
-            this.x += this.vx;
-            this.y += this.vy;
-            
-            if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-            if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-        }
-        
-        draw() {
-            ctx.save();
-            ctx.globalAlpha = this.opacity;
-            ctx.fillStyle = '#01B2D6';
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-        }
-    }
-    
-    function init() {
-        for (let i = 0; i < particleCount; i++) {
-            particles.push(new Particle());
-        }
-    }
-    
-    function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        particles.forEach(particle => {
-            particle.update();
-            particle.draw();
-        });
-        
-        requestAnimationFrame(animate);
-    }
-    
-    resizeCanvas();
-    init();
-    animate();
-    
-    window.addEventListener('resize', resizeCanvas);
-}
 
-// Add CSS for ripple animation
-const rippleCSS = `
-@keyframes ripple {
-    to {
-        transform: scale(2);
-        opacity: 0;
-    }
-}
-
-@keyframes fadeOut {
-    to {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-}
-`;
-
-const style = document.createElement('style');
-style.textContent = rippleCSS;
-document.head.appendChild(style);
 
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
@@ -696,9 +596,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initServiceCardEffects();
     initScrollAnimations();
     
-    // Optional: Add particle effect (uncomment to enable)
-    // initParticleEffect();
-    
-    console.log('🚀 MedFlow RCM Landing Page initialized!');
-    console.log('💬 Chat widget ready for n8n webhook integration');
+
 });
