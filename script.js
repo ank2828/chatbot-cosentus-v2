@@ -125,9 +125,12 @@ class ChatWidget {
         this.chatWindow.style.display = 'flex';
         this.isOpen = true;
         
-        // Hide pulse
+        // Hide pulse and switch icon to V arrow
         const pulse = document.querySelector('.chat-pulse');
         if (pulse) pulse.style.display = 'none';
+        
+        // Switch to V arrow icon
+        this.chatButton.classList.add('chat-open');
         
         // Focus input after animation
         setTimeout(() => {
@@ -150,7 +153,8 @@ class ChatWidget {
         
         this.isOpen = false;
         
-        // Show pulse again
+        // Switch back to text bubbles icon and show pulse again
+        this.chatButton.classList.remove('chat-open');
         const pulse = document.querySelector('.chat-pulse');
         if (pulse) pulse.style.display = 'block';
         
