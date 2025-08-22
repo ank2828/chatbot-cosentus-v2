@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
 app.post('/api/chat', async (req, res) => {
     try {
         // n8n webhook URL
-        const webhookUrl = 'https://thunderbird-labs.app.n8n.cloud/webhook/08176b32-96eb-482d-8fe8-afbc7d957755';
+        const webhookUrl = 'https://thunderbird-labs.app.n8n.cloud/webhook/139257aa-ded0-4225-82de-a034cb191a52';
         
         console.log('Received chat message:', req.body);
         
