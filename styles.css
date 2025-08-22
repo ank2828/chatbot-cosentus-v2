@@ -980,32 +980,36 @@ body {
     display: none;
     flex-direction: column;
     animation: slideUp 0.3s ease;
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 @keyframes slideUp {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(20px) translateZ(0);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) translateZ(0);
     }
 }
 
 @keyframes slideDown {
     from {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) translateZ(0);
     }
     to {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(20px) translateZ(0);
     }
 }
 
 .chat-window.slide-down {
     animation: slideDown 0.3s ease;
+    animation-fill-mode: forwards;
 }
 
 .chat-header {

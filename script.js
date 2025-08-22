@@ -122,8 +122,13 @@ class ChatWidget {
     }
     
     openChat() {
+        // Ensure clean state
+        this.chatWindow.classList.remove('slide-down');
         this.chatWindow.style.display = 'flex';
         this.isOpen = true;
+        
+        // Force a reflow to ensure display change is applied
+        this.chatWindow.offsetHeight;
         
         // Hide pulse and switch icon to V arrow
         const pulse = document.querySelector('.chat-pulse');
@@ -135,28 +140,42 @@ class ChatWidget {
         // Focus input after animation
         setTimeout(() => {
             this.chatInput.focus();
-        }, 300);
+        }, 320);
         
         // Track analytics (if needed)
         this.trackEvent('chat_opened');
     }
     
     closeChat() {
-        // Add slide-down animation
-        this.chatWindow.classList.add('slide-down');
+        // Prevent multiple calls during animation
+        if (!this.isOpen) return;
         
-        // Wait for animation to complete before hiding
-        setTimeout(() => {
-            this.chatWindow.style.display = 'none';
-            this.chatWindow.classList.remove('slide-down');
-        }, 300); // Match the CSS animation duration
-        
+        // Immediately update state
         this.isOpen = false;
         
         // Switch back to text bubbles icon and show pulse again
         this.chatButton.classList.remove('chat-open');
         const pulse = document.querySelector('.chat-pulse');
         if (pulse) pulse.style.display = 'block';
+        
+        // Add slide-down animation
+        this.chatWindow.classList.add('slide-down');
+        
+        // Use animation event listener for precise timing
+        const handleAnimationEnd = () => {
+            this.chatWindow.style.display = 'none';
+            this.chatWindow.classList.remove('slide-down');
+            this.chatWindow.removeEventListener('animationend', handleAnimationEnd);
+        };
+        
+        this.chatWindow.addEventListener('animationend', handleAnimationEnd);
+        
+        // Fallback timeout in case animationend doesn't fire
+        setTimeout(() => {
+            if (this.chatWindow.classList.contains('slide-down')) {
+                handleAnimationEnd();
+            }
+        }, 350);
         
         this.trackEvent('chat_closed');
     }
