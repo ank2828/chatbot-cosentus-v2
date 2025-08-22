@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const webhookUrl = 'https://thunderbird-labs.app.n8n.cloud/webhook/08176b32-96eb-482d-8fe8-afbc7d957755';
+        const webhookUrl = 'https://thunderbird-labs.app.n8n.cloud/webhook/139257aa-ded0-4225-82de-a034cb191a52';
         
         console.log('Received chat message:', req.body);
         console.log('Session ID being sent to n8n:', req.body.sessionId);
