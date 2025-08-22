@@ -924,6 +924,22 @@ body {
     box-shadow: 0 8px 30px rgba(1, 178, 214, 0.6);
 }
 
+/* Chevron down arrow for when chat is open */
+.chat-button .v-arrow {
+    display: none;
+    font-size: 1.5rem;
+    color: #01B2D6;
+}
+
+/* Toggle states */
+.chat-button.chat-open .fa-comments {
+    display: none;
+}
+
+.chat-button.chat-open .v-arrow {
+    display: block;
+}
+
 .chat-pulse {
     position: absolute;
     top: -3px;
@@ -996,7 +1012,7 @@ body {
 
 .chat-header {
     position: relative;
-    padding: 1.5rem;
+    padding: 1rem 1.5rem;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
@@ -1038,7 +1054,7 @@ body {
 
 .chat-close {
     position: absolute;
-    top: 12px;
+    top: 8px;
     right: 12px;
     width: 28px;
     height: 28px;
@@ -1478,6 +1494,19 @@ a:hover {
     object-fit: contain;
     margin-bottom: 0.25rem;
     filter: brightness(1.1);
+}
+
+/* Think Growth Text Styling */
+.think-growth-text {
+    font-family: 'Montserrat', sans-serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 0.75rem;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 0.25rem;
+    opacity: 0.9;
 }
 
 /* Adjust chat info spacing for logo */
