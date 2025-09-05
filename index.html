@@ -71,7 +71,7 @@
                             <span>Start Now</span>
                             <i class="fas fa-rocket"></i>
                         </button>
-                        <button class="secondary-button glass-button" onclick="document.getElementById('chatButton').click()">
+                        <button class="secondary-button glass-button" onclick="if(window.cosentusChatbot) window.cosentusChatbot.open()">
                             <i class="fas fa-comments"></i>
                             <span>Try Chat Assistant</span>
                         </button>
@@ -390,46 +390,37 @@
     </footer>
 
     <!-- Chat Widget -->
-    <div id="chatWidget" class="chat-widget">
-        <div id="chatButton" class="chat-button">
+    <div class="cosentus-chatbot">
+        <div class="cosentus-chat-button">
             <i class="fas fa-comments"></i>
-            <i class="fas fa-chevron-down v-arrow"></i>
-            <div class="chat-pulse"></div>
+            <div class="v-arrow">
+                <div class="custom-arrow-down"></div>
+            </div>
+            <div class="cosentus-chat-pulse"></div>
         </div>
         
-        <div id="chatWindow" class="chat-window">
-            <div class="chat-header">
-                <div class="chat-info">
-                    <img src="https://cosentus.com/wp-content/uploads/2021/08/New-Cosentus-Logo-1.png" alt="Cosentus Logo" class="chat-logo">
-                    <div class="think-growth-text">THINK GROWTH</div>
+        <div class="cosentus-chat-window">
+            <div class="cosentus-chat-header">
+                <div class="cosentus-chat-info">
+                    <img src="https://cosentus.com/wp-content/uploads/2021/08/New-Cosentus-Logo-1.png" alt="Cosentus Logo" class="cosentus-chat-logo">
+                    <div class="cosentus-think-growth-text">THINK GROWTH</div>
                 </div>
-                <button id="chatClose" class="chat-close">
-                    <div class="menu-dots">
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                    </div>
+                <button class="cosentus-chat-close">
+                    ×
                 </button>
             </div>
             
-            <div id="chatMessages" class="chat-messages">
-                <div class="message bot-message">
-                    <div class="message-content">
-                        <div class="agent-title">
-                            <img src="lion_transparent.png" alt="Cosentus Logo" class="agent-logo">
-                            Cosentus AI Agent
-                        </div>
-                        <p>Welcome to Cosentus! How may I help you today?</p>
-                    </div>
-                </div>
-            </div>
+            <div class="cosentus-chat-messages"></div>
             
-            <div class="chat-input-area">
-                <div class="chat-input-container">
-                    <input type="text" id="chatInput" placeholder="Message..." />
-                    <button id="chatSend" class="chat-send">
+            <div class="cosentus-chat-input-area">
+                <div class="cosentus-chat-input-container">
+                    <input type="text" class="cosentus-chat-input" placeholder="Message..." />
+                    <button class="cosentus-chat-send">
                         <i class="fas fa-paper-plane"></i>
                     </button>
+                </div>
+                <div class="cosentus-chat-disclaimer">
+                    Powered by AI - Responses are informational only
                 </div>
             </div>
         </div>

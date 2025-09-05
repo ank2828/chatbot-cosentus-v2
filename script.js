@@ -1,459 +1,453 @@
-// Enhanced Chat Widget with modern design
-class ChatWidget {
-    constructor() {
-        this.isOpen = false;
-        this.messages = [];
-        this.isTyping = false;
-        
-        this.initializeElements();
-        this.attachEventListeners();
-        this.setupAnimations();
-        this.setupDragFunctionality();
-    }
+// Enhanced Cosentus Chatbot with modern design
+(function() {
+    'use strict';
     
-    initializeElements() {
-        this.chatButton = document.getElementById('chatButton');
-        this.chatWindow = document.getElementById('chatWindow');
-        this.chatClose = document.getElementById('chatClose');
-        this.chatInput = document.getElementById('chatInput');
-        this.chatSend = document.getElementById('chatSend');
-        this.chatMessages = document.getElementById('chatMessages');
-    }
-    
-    attachEventListeners() {
-        // Chat button events
-        this.chatButton.addEventListener('click', () => this.toggleChat());
-        this.chatClose.addEventListener('click', () => this.closeChat());
+    class CosentusChatbot {
+        constructor(config = {}) {
+            this.config = Object.assign({
+                position: 'bottom-right',
+                logoUrl: 'https://cosentus.com/wp-content/uploads/2021/08/New-Cosentus-Logo-1.png',
+                agentLogoUrl: 'https://cosentus.com/wp-content/uploads/2025/09/lion_transparent.png',
+                companyName: 'Cosentus',
+                welcomeMessage: 'Welcome to Cosentus! How may I help you today?',
+                primaryColor: '#01B2D6'
+            }, config);
+            
+            this.isOpen = false;
+            this.messages = [];
+            this.isTyping = false;
+            this.sessionId = null;
+            
+            this.init();
+        }
         
-        // Message sending events
-        this.chatSend.addEventListener('click', () => this.sendMessage());
-        this.chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+        init() {
+            this.initializeElements();
+            this.attachEventListeners();
+            this.setupDragFunctionality();
+            this.addMessage(this.config.welcomeMessage, 'bot');
+        }
+        
+        initializeElements() {
+            this.chatButton = document.querySelector('.cosentus-chat-button');
+            this.chatWindow = document.querySelector('.cosentus-chat-window');
+            this.chatClose = document.querySelector('.cosentus-chat-close');
+            this.chatInput = document.querySelector('.cosentus-chat-input');
+            this.chatSend = document.querySelector('.cosentus-chat-send');
+            this.chatMessages = document.querySelector('.cosentus-chat-messages');
+        }
+        
+        attachEventListeners() {
+            this.chatButton.addEventListener('click', (e) => {
                 e.preventDefault();
-                this.sendMessage();
-            }
-        });
+                e.stopPropagation();
+                this.toggleChat();
+            });
+            this.chatClose.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.closeChat();
+            });
+            this.chatSend.addEventListener('click', () => this.sendMessage());
+            this.chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendMessage();
+                }
+            });
+            this.chatInput.addEventListener('input', () => this.handleTyping());
+            
+            // Delay the document click listener to avoid immediate conflicts
+            setTimeout(() => {
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.cosentus-chatbot') && this.isOpen) {
+                        this.closeChat();
+                    }
+                });
+            }, 100);
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && this.isOpen) {
+                    this.closeChat();
+                }
+            });
+        }
         
+        toggleChat() {
+            if (this.isOpen) {
+                this.closeChat();
+            } else {
+                this.openChat();
+            }
+        }
+        
+        openChat() {
+            this.chatWindow.classList.remove('slide-down');
+            this.chatWindow.style.display = 'flex';
+            this.isOpen = true;
+            this.chatWindow.offsetHeight;
+            
+            const pulse = document.querySelector('.cosentus-chat-pulse');
+            if (pulse) pulse.style.display = 'none';
+            
+            this.chatButton.classList.add('chat-open');
+            
+            setTimeout(() => {
+                this.chatInput.focus();
+            }, 320);
+            
+            this.trackEvent('chat_opened');
+        }
+        
+        closeChat() {
+            if (!this.isOpen) return;
+            
+            this.isOpen = false;
+            this.chatButton.classList.remove('chat-open');
+            const pulse = document.querySelector('.cosentus-chat-pulse');
+            if (pulse) pulse.style.display = 'block';
+            
+            this.chatWindow.classList.add('slide-down');
+            
+            const handleAnimationEnd = () => {
+                this.chatWindow.style.display = 'none';
+                this.chatWindow.classList.remove('slide-down');
+                this.chatWindow.removeEventListener('animationend', handleAnimationEnd);
+            };
+            
+            this.chatWindow.addEventListener('animationend', handleAnimationEnd);
+            
+            setTimeout(() => {
+                if (this.chatWindow.classList.contains('slide-down')) {
+                    handleAnimationEnd();
+                }
+            }, 350);
+            
+            this.trackEvent('chat_closed');
+        }
+        
+        setupDragFunctionality() {
+            let isDragging = false;
+            let dragOffset = { x: 0, y: 0 };
+            
+            const chatHeader = this.chatWindow.querySelector('.cosentus-chat-header');
+            chatHeader.classList.add('cosentus-drag-cursor');
+            chatHeader.style.userSelect = 'none';
+            
+            const startDrag = (e) => {
+                if (e.target.closest('.cosentus-chat-close')) return;
+                
+                isDragging = true;
+                const rect = this.chatWindow.getBoundingClientRect();
+                dragOffset.x = e.clientX - rect.left;
+                dragOffset.y = e.clientY - rect.top;
+                
+                document.addEventListener('mousemove', handleDrag);
+                document.addEventListener('mouseup', stopDrag);
+                
+                document.body.style.userSelect = 'none';
+                chatHeader.classList.remove('cosentus-drag-cursor');
+                chatHeader.classList.add('cosentus-drag-cursor-grabbing');
+            };
+            
+            const handleDrag = (e) => {
+                if (!isDragging) return;
+                
+                e.preventDefault();
+                
+                let newLeft = e.clientX - dragOffset.x;
+                let newTop = e.clientY - dragOffset.y;
+                
+                const windowWidth = window.innerWidth;
+                const windowHeight = window.innerHeight;
+                const chatWidth = this.chatWindow.offsetWidth;
+                const chatHeight = this.chatWindow.offsetHeight;
+                
+                newLeft = Math.max(10, Math.min(newLeft, windowWidth - chatWidth - 10));
+                newTop = Math.max(10, Math.min(newTop, windowHeight - chatHeight - 10));
+                
+                this.chatWindow.style.position = 'fixed';
+                this.chatWindow.style.left = newLeft + 'px';
+                this.chatWindow.style.top = newTop + 'px';
+                this.chatWindow.style.right = 'auto';
+                this.chatWindow.style.bottom = 'auto';
+            };
+            
+            const stopDrag = () => {
+                isDragging = false;
+                document.removeEventListener('mousemove', handleDrag);
+                document.removeEventListener('mouseup', stopDrag);
+                
+                document.body.style.userSelect = '';
+                chatHeader.classList.remove('cosentus-drag-cursor-grabbing');
+                chatHeader.classList.add('cosentus-drag-cursor');
+            };
+            
+            chatHeader.addEventListener('mousedown', startDrag);
+        }
 
-        // Input events
-        this.chatInput.addEventListener('input', () => this.handleTyping());
-        
-        // Close chat when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.chat-widget') && this.isOpen) {
-                this.closeChat();
+        async sendMessage() {
+            const message = this.chatInput.value.trim();
+            if (!message || this.isTyping) return;
+            
+            this.addMessage(message, 'user');
+            this.chatInput.value = '';
+            
+            // Delay typing indicator by 1 second for better UX
+            setTimeout(() => {
+                this.showTypingIndicator();
+            }, 1000);
+            
+            try {
+                const response = await this.callWebhook(message);
+                this.hideTypingIndicator();
+                
+                setTimeout(() => {
+                    this.addMessage(response, 'bot');
+                }, 500);
+                
+                this.trackEvent('message_sent', { message: message });
+                
+            } catch (error) {
+                console.error('Chat error:', error);
+                this.hideTypingIndicator();
+                
+                setTimeout(() => {
+                    this.addMessage(
+                        "I apologize, but I'm currently experiencing technical difficulties. Please try again later or contact our support team directly.",
+                        'bot'
+                    );
+                }, 500);
+                
+                this.trackEvent('message_error', { error: error.message });
             }
-        });
+        }
         
-        // Escape key to close chat
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isOpen) {
-                this.closeChat();
+        async callWebhook(message) {
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        timestamp: new Date().toISOString(),
+                        userId: this.getUserId(),
+                        sessionId: this.getSessionId(),
+                        context: {
+                            page: 'landing-page',
+                            previousMessages: this.messages.slice(-3)
+                        }
+                    }),
+                    timeout: 30000
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                return data.response || data.message || 'Thank you for your message.';
+                
+            } catch (error) {
+                console.error('Webhook Error:', error);
+                throw error;
             }
-        });
-    }
-    
-    setupAnimations() {
-        // Animate progress bars on scroll
-        const progressBars = document.querySelectorAll('.progress-fill');
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.transition = 'width 2s ease';
-                }
-            });
-        });
+        }
         
-        progressBars.forEach(bar => observer.observe(bar));
-        
-        // Animate stats on scroll
-        const stats = document.querySelectorAll('.stat-number');
-        const statsObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    this.animateValue(entry.target);
-                }
-            });
-        });
-        
-        stats.forEach(stat => statsObserver.observe(stat));
-    }
-    
-    animateValue(element) {
-        const finalValue = element.textContent;
-        const isPercentage = finalValue.includes('%');
-        const isDays = finalValue.includes('Days') || finalValue === '24/7';
-        
-        if (isDays) return; // Skip animation for complex values
-        
-        const numericValue = parseFloat(finalValue.replace(/[^\d.]/g, ''));
-        const duration = 2000;
-        const increment = numericValue / (duration / 16);
-        let current = 0;
-        
-        const timer = setInterval(() => {
-            current += increment;
-            if (current >= numericValue) {
-                current = numericValue;
-                clearInterval(timer);
+        addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `cosentus-message ${sender}-message`;
+            
+            // Add smooth fade-in animation for bot messages
+            if (sender === 'bot') {
+                messageDiv.classList.add('fade-in');
             }
             
-            if (isPercentage) {
-                element.textContent = Math.floor(current) + '%';
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'cosentus-message-content';
+            
+            if (sender === 'bot') {
+                contentDiv.innerHTML = `
+                    <div class="cosentus-agent-title">
+                        <img src="${this.config.agentLogoUrl}" alt="Cosentus Lion" class="cosentus-agent-logo">
+                        ${this.config.companyName} AI Agent
+                    </div>
+                    <p>${this.formatMessage(text)}</p>
+                `;
             } else {
-                element.textContent = '$' + current.toFixed(1) + 'M';
+                contentDiv.innerHTML = `<p>${this.formatMessage(text)}</p>`;
             }
-        }, 16);
-    }
-    
-
-    toggleChat() {
-        if (this.isOpen) {
-            this.closeChat();
-        } else {
+            
+            messageDiv.appendChild(contentDiv);
+            this.chatMessages.appendChild(messageDiv);
+            this.scrollToBottom();
+            
+            this.messages.push({
+                text: text,
+                sender: sender,
+                timestamp: new Date()
+            });
+        }
+        
+        formatMessage(text) {
+            let formatted = text
+                // Handle bold and italic formatting
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                
+                // Convert double newlines to paragraph breaks (better spacing)
+                .replace(/\n\n/g, '<br><br>')
+                // Convert single newlines to line breaks
+                .replace(/\n/g, '<br>')
+                
+                // Format bullet points with proper spacing and indentation
+                .replace(/•\s*/g, '<br>&nbsp;&nbsp;• ')
+                
+                // Format section headers (lines ending with colon)
+                .replace(/<br>([^<]*:)<br>/g, '<br><strong>$1</strong><br>')
+                
+                // Format numbered lists (1. 2. 3. etc.)
+                .replace(/(\d+)\.\s*/g, '<br>&nbsp;&nbsp;$1. ')
+                
+                // Clean up any leading line breaks
+                .replace(/^<br>/, '')
+                .replace(/^&nbsp;&nbsp;/, '');
+            
+            // Handle links (markdown style and plain URLs)
+            formatted = formatted.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+            formatted = formatted.replace(/(^|[^"'>])(https?:\/\/[^\s<>"']+)/gi, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+            
+            return formatted;
+        }
+        
+        showTypingIndicator() {
+            this.isTyping = true;
+            this.chatSend.disabled = true;
+            
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'cosentus-message bot-message cosentus-typing-indicator';
+            typingDiv.innerHTML = `
+                <div class="cosentus-message-content">
+                    <div class="cosentus-agent-title">
+                        <img src="${this.config.agentLogoUrl}" alt="Cosentus Lion" class="cosentus-agent-logo">
+                        ${this.config.companyName} AI Agent
+                    </div>
+                    <div class="cosentus-loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            `;
+            
+            this.chatMessages.appendChild(typingDiv);
+            this.scrollToBottom();
+        }
+        
+        hideTypingIndicator() {
+            this.isTyping = false;
+            this.chatSend.disabled = false;
+            
+            const typingIndicator = this.chatMessages.querySelector('.cosentus-typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+        
+        handleTyping() {
+            this.chatSend.disabled = !this.chatInput.value.trim() || this.isTyping;
+        }
+        
+        scrollToBottom() {
+            this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+        }
+        
+        getUserId() {
+            let userId = localStorage.getItem('cosentus_chatUserId');
+            if (!userId) {
+                userId = 'user_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('cosentus_chatUserId', userId);
+            }
+            return userId;
+        }
+        
+        getSessionId() {
+            if (!this.sessionId) {
+                // Generate or retrieve persistent session ID for conversation continuity
+                let persistentSessionId = localStorage.getItem('cosentus_session_id_v2');
+                if (!persistentSessionId) {
+                    persistentSessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                    localStorage.setItem('cosentus_session_id_v2', persistentSessionId);
+                }
+                this.sessionId = persistentSessionId;
+            }
+            return this.sessionId;
+        }
+        
+        trackEvent(eventName, properties = {}) {
+            // Google Analytics 4 integration
+            if (typeof gtag !== 'undefined') {
+                gtag('event', eventName, {
+                    event_category: 'cosentus_chat',
+                    ...properties
+                });
+            }
+        }
+        
+        // Public API methods
+        open() {
             this.openChat();
         }
+        
+        close() {
+            this.closeChat();
+        }
+        
+        sendBotMessage(message) {
+            this.addMessage(message, 'bot');
+        }
+        
+        clearMessages() {
+            this.chatMessages.innerHTML = '';
+            this.messages = [];
+            this.addMessage(this.config.welcomeMessage, 'bot');
+        }
     }
     
-    openChat() {
-        // Ensure clean state
-        this.chatWindow.classList.remove('slide-down');
-        this.chatWindow.style.display = 'flex';
-        this.isOpen = true;
+    // Initialize when everything is ready
+    function initChatbot() {
+        // Check if already initialized
+        if (window.cosentusChatbot) {
+            return;
+        }
         
-        // Force a reflow to ensure display change is applied
-        this.chatWindow.offsetHeight;
-        
-        // Hide pulse and switch icon to V arrow
-        const pulse = document.querySelector('.chat-pulse');
-        if (pulse) pulse.style.display = 'none';
-        
-        // Switch to V arrow icon
-        this.chatButton.classList.add('chat-open');
-        
-        // Focus input after animation
-        setTimeout(() => {
-            this.chatInput.focus();
-        }, 320);
-        
-        // Track analytics (if needed)
-        this.trackEvent('chat_opened');
-    }
-    
-    closeChat() {
-        // Prevent multiple calls during animation
-        if (!this.isOpen) return;
-        
-        // Immediately update state
-        this.isOpen = false;
-        
-        // Switch back to text bubbles icon and show pulse again
-        this.chatButton.classList.remove('chat-open');
-        const pulse = document.querySelector('.chat-pulse');
-        if (pulse) pulse.style.display = 'block';
-        
-        // Add slide-down animation
-        this.chatWindow.classList.add('slide-down');
-        
-        // Use animation event listener for precise timing
-        const handleAnimationEnd = () => {
-            this.chatWindow.style.display = 'none';
-            this.chatWindow.classList.remove('slide-down');
-            this.chatWindow.removeEventListener('animationend', handleAnimationEnd);
-        };
-        
-        this.chatWindow.addEventListener('animationend', handleAnimationEnd);
-        
-        // Fallback timeout in case animationend doesn't fire
-        setTimeout(() => {
-            if (this.chatWindow.classList.contains('slide-down')) {
-                handleAnimationEnd();
-            }
-        }, 350);
-        
-        this.trackEvent('chat_closed');
-    }
-    
-    setupDragFunctionality() {
-        let isDragging = false;
-        let dragOffset = { x: 0, y: 0 };
-        
-        // Make the chat header draggable
-        const chatHeader = this.chatWindow.querySelector('.chat-header');
-        
-        chatHeader.classList.add('drag-cursor');
-        chatHeader.style.userSelect = 'none';
-        
-        const startDrag = (e) => {
-            // Only start drag if clicking on header (not buttons or other elements)
-            if (e.target.closest('.chat-close')) return;
-            
-            isDragging = true;
-            
-            const rect = this.chatWindow.getBoundingClientRect();
-            dragOffset.x = e.clientX - rect.left;
-            dragOffset.y = e.clientY - rect.top;
-            
-            document.addEventListener('mousemove', handleDrag);
-            document.addEventListener('mouseup', stopDrag);
-            
-            // Prevent text selection while dragging
-            document.body.style.userSelect = 'none';
-            chatHeader.classList.remove('drag-cursor');
-            chatHeader.classList.add('drag-cursor-grabbing');
-        };
-        
-        const handleDrag = (e) => {
-            if (!isDragging) return;
-            
-            e.preventDefault();
-            
-            let newLeft = e.clientX - dragOffset.x;
-            let newTop = e.clientY - dragOffset.y;
-            
-            // Get window dimensions
-            const windowWidth = window.innerWidth;
-            const windowHeight = window.innerHeight;
-            const chatWidth = this.chatWindow.offsetWidth;
-            const chatHeight = this.chatWindow.offsetHeight;
-            
-            // Constrain to viewport bounds
-            newLeft = Math.max(10, Math.min(newLeft, windowWidth - chatWidth - 10));
-            newTop = Math.max(10, Math.min(newTop, windowHeight - chatHeight - 10));
-            
-            // Update position
-            this.chatWindow.style.position = 'fixed';
-            this.chatWindow.style.left = newLeft + 'px';
-            this.chatWindow.style.top = newTop + 'px';
-            this.chatWindow.style.right = 'auto';
-            this.chatWindow.style.bottom = 'auto';
-        };
-        
-        const stopDrag = () => {
-            isDragging = false;
-            document.removeEventListener('mousemove', handleDrag);
-            document.removeEventListener('mouseup', stopDrag);
-            
-            // Restore cursor and text selection
-            document.body.style.userSelect = '';
-            chatHeader.classList.remove('drag-cursor-grabbing');
-            chatHeader.classList.add('drag-cursor');
-        };
-        
-        // Attach drag events
-        chatHeader.addEventListener('mousedown', startDrag);
-        
-        // Reset position when chat is reopened
-        const originalOpenChat = this.openChat.bind(this);
-        this.openChat = () => {
-            originalOpenChat();
-            
-            // Reset to default position on open
-            setTimeout(() => {
-                this.chatWindow.style.position = 'absolute';
-                this.chatWindow.style.left = 'auto';
-                this.chatWindow.style.top = 'auto';
-                this.chatWindow.style.right = '0';
-                this.chatWindow.style.bottom = '80px';
-            }, 100);
-        };
-    }
-
-    async sendMessage() {
-        const message = this.chatInput.value.trim();
-        if (!message || this.isTyping) return;
-        
-        // Add user message
-        this.addMessage(message, 'user');
-        this.chatInput.value = '';
-        
-
-        
-        // Show typing indicator
-        this.showTypingIndicator();
+        // Double check that DOM elements exist
+        const button = document.querySelector('.cosentus-chat-button');
+        if (!button) {
+            // Try again in 500ms
+            setTimeout(initChatbot, 500);
+            return;
+        }
         
         try {
-            // Call webhook
-            const response = await this.callWebhook(message);
-            
-            // Hide typing indicator
-            this.hideTypingIndicator();
-            
-            // Add bot response with delay for natural feel
-            setTimeout(() => {
-                this.addMessage(response, 'bot');
-            }, 500);
-            
-            this.trackEvent('message_sent', { message: message });
-            
+            // Initialize the chatbot
+            window.cosentusChatbot = new CosentusChatbot();
         } catch (error) {
-            console.error('Chat error:', error);
-            this.hideTypingIndicator();
-            
-            setTimeout(() => {
-                this.addMessage(
-                    "I apologize, but I'm currently experiencing technical difficulties. Please try again later or contact our support team directly.",
-                    'bot'
-                );
-            }, 500);
-            
-            this.trackEvent('message_error', { error: error.message });
+            console.error('Cosentus Chat: Initialization failed', error);
         }
     }
     
-    async callWebhook(message) {
-        const response = await fetch('/api/chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                message: message,
-                timestamp: new Date().toISOString(),
-                userId: this.getUserId(),
-                sessionId: this.getSessionId(), // Unique session ID that resets on page refresh
-                context: {
-                    page: 'landing-page',
-                    previousMessages: this.messages.slice(-3) // Last 3 messages for context
-                }
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        return data.response || data.message || 'Thank you for your question. Our team will get back to you soon.';
+    // Multiple initialization strategies for compatibility
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initChatbot);
+    } else {
+        // DOM already loaded
+        initChatbot();
     }
     
-    addMessage(text, sender) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${sender}-message`;
-        
-        const contentDiv = document.createElement('div');
-        contentDiv.className = 'message-content';
-        
-        if (sender === 'bot') {
-            contentDiv.innerHTML = `
-                <div class="agent-title">
-                    <img src="lion_transparent.png" alt="Cosentus Logo" class="agent-logo">
-                    Cosentus AI Agent
-                </div>
-                <p>${this.formatMessage(text)}</p>
-            `;
-        } else {
-            contentDiv.innerHTML = `<p>${this.formatMessage(text)}</p>`;
-        }
-        
-        messageDiv.appendChild(contentDiv);
-        
-        this.chatMessages.appendChild(messageDiv);
-        this.scrollToBottom();
-        
-        // Store message
-        this.messages.push({
-            text: text,
-            sender: sender,
-            timestamp: new Date()
-        });
-    }
-    
-    formatMessage(text) {
-        // Basic markdown support for links and emphasis
-        let formatted = text
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>');
-        
-        // Convert markdown links [text](url) first
-        formatted = formatted.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-        
-        // Then convert plain URLs that aren't already inside HTML tags
-        formatted = formatted.replace(/(^|[^"'>])(https?:\/\/[^\s<>"']+)/gi, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
-        
-        return formatted;
-    }
-    
-
-    
-    showTypingIndicator() {
-        this.isTyping = true;
-        this.chatSend.disabled = true;
-        
-        const typingDiv = document.createElement('div');
-        typingDiv.className = 'message bot-message typing-indicator';
-        typingDiv.innerHTML = `
-            <div class="message-content">
-                <div class="agent-title">
-                    <img src="lion_transparent.png" alt="Cosentus Logo" class="agent-logo">
-                    Cosentus AI Agent
-                </div>
-                <div class="loading-dots">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-            </div>
-        `;
-        
-        this.chatMessages.appendChild(typingDiv);
-        this.scrollToBottom();
-    }
-    
-    hideTypingIndicator() {
-        this.isTyping = false;
-        this.chatSend.disabled = false;
-        
-        const typingIndicator = this.chatMessages.querySelector('.typing-indicator');
-        if (typingIndicator) {
-            typingIndicator.remove();
-        }
-    }
-    
-
-    
-    handleTyping() {
-        // Could implement typing indicators or auto-suggestions here
-        const inputValue = this.chatInput.value;
-        
-        // Enable/disable send button based on input
-        this.chatSend.disabled = !inputValue.trim() || this.isTyping;
-    }
-    
-    scrollToBottom() {
-        this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
-    }
-    
-    getUserId() {
-        // Generate or retrieve user ID for session tracking
-        let userId = localStorage.getItem('chatUserId');
-        if (!userId) {
-            userId = 'user_' + Math.random().toString(36).substr(2, 9);
-            localStorage.setItem('chatUserId', userId);
-        }
-        return userId;
-    }
-    
-    getSessionId() {
-        // Generate unique session ID that resets on page refresh
-        // This ensures each browser session has isolated chat memory
-        if (!this.sessionId) {
-            this.sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-
-        }
-        return this.sessionId;
-    }
-    
-    trackEvent(eventName, properties = {}) {
-        // Analytics tracking (implement with your preferred analytics service)
-        if (typeof gtag !== 'undefined') {
-            gtag('event', eventName, {
-                event_category: 'chat_widget',
-                ...properties
-            });
-        }
-    }
-}
+})();
 
 // Smooth scrolling for navigation links
 function initSmoothScrolling() {
@@ -582,19 +576,66 @@ function initScrollAnimations() {
     });
 }
 
+// Animate progress bars on scroll
+function initProgressAnimations() {
+    const progressBars = document.querySelectorAll('.progress-fill');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.transition = 'width 2s ease';
+            }
+        });
+    });
+    
+    progressBars.forEach(bar => observer.observe(bar));
+    
+    // Animate stats on scroll
+    const stats = document.querySelectorAll('.stat-number');
+    const statsObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateValue(entry.target);
+            }
+        });
+    });
+    
+    stats.forEach(stat => statsObserver.observe(stat));
+}
 
+function animateValue(element) {
+    const finalValue = element.textContent;
+    const isPercentage = finalValue.includes('%');
+    const isDays = finalValue.includes('Days') || finalValue === '24/7';
+    
+    if (isDays) return; // Skip animation for complex values
+    
+    const numericValue = parseFloat(finalValue.replace(/[^\d.]/g, ''));
+    const duration = 2000;
+    const increment = numericValue / (duration / 16);
+    let current = 0;
+    
+    const timer = setInterval(() => {
+        current += increment;
+        if (current >= numericValue) {
+            current = numericValue;
+            clearInterval(timer);
+        }
+        
+        if (isPercentage) {
+            element.textContent = Math.floor(current) + '%';
+        } else {
+            element.textContent = '$' + current.toFixed(1) + 'M';
+        }
+    }, 16);
+}
 
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize chat widget
-    new ChatWidget();
-    
     // Initialize other features
     initSmoothScrolling();
     initNavbarEffects();
     initButtonEffects();
     initServiceCardEffects();
     initScrollAnimations();
-    
-
+    initProgressAnimations();
 });

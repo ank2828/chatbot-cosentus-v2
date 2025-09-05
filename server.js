@@ -40,12 +40,44 @@ app.post('/api/chat', async (req, res) => {
             })
         });
         
+        console.log('Webhook response status:', response.status);
+        console.log('Webhook response headers:', response.headers.get('content-type'));
+        
         if (!response.ok) {
-            throw new Error(`Webhook responded with status: ${response.status}`);
+            const errorText = await response.text();
+            console.error('Webhook error response:', errorText);
+            throw new Error(`Webhook responded with status: ${response.status} - ${errorText}`);
         }
         
-        const data = await response.json();
-        console.log('Webhook response:', data);
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        let data;
+        
+        if (contentType && contentType.includes('application/json')) {
+            try {
+                data = await response.json();
+                console.log('Webhook JSON response:', data);
+            } catch (jsonError) {
+                console.error('JSON parse error:', jsonError);
+                const textResponse = await response.text();
+                console.log('Raw response text:', textResponse);
+                throw new Error('Invalid JSON response from webhook');
+            }
+        } else {
+            // Not JSON, treat as text
+            const textResponse = await response.text();
+            console.log('Webhook text response:', textResponse);
+            
+            // Try to parse as JSON anyway (some APIs don't set correct content-type)
+            try {
+                data = JSON.parse(textResponse);
+                console.log('Successfully parsed text as JSON:', data);
+            } catch (parseError) {
+                console.error('Could not parse response as JSON:', parseError);
+                // Use the raw text as the response
+                data = { output: textResponse };
+            }
+        }
         
         // Handle both array and object responses from n8n
         let responseText = 'Thank you for your message.';

@@ -1,0 +1,1567 @@
+<?php
+/**
+ * Plugin Name: Cosentus AI Chatbot v2
+ * Description: AI-powered chatbot widget for WordPress websites
+ * Version: 2.0
+ * Author: Cosentus LLC
+ */
+
+// Prevent direct access
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+class CosentusChatbotV2 {
+    
+    private $options;
+    
+    public function __construct() {
+        add_action('init', array($this, 'init'));
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
+        add_action('wp_footer', array($this, 'render_chatbot'));
+        add_action('admin_menu', array($this, 'add_admin_menu'));
+        add_action('admin_init', array($this, 'admin_init'));
+        add_action('wp_head', array($this, 'add_inline_styles'));
+        
+        // Add WordPress AJAX handlers for secure message processing
+        add_action('wp_ajax_cosentus_chat_message_v2', array($this, 'handle_chat_message'));
+        add_action('wp_ajax_nopriv_cosentus_chat_message_v2', array($this, 'handle_chat_message'));
+    }
+    
+    public function init() {
+        $this->options = get_option('cosentus_chatbot_options', $this->get_default_options());
+    }
+    
+    public function get_default_options() {
+        return array(
+            'enabled' => true,
+            'webhook_url' => '', // Changed from api_endpoint to webhook_url for security
+            'company_name' => 'Cosentus',
+            'logo_url' => 'https://cosentus.com/wp-content/uploads/2021/08/New-Cosentus-Logo-1.png',
+            'agent_logo_url' => '',
+            'welcome_message' => 'Welcome to Cosentus! How may I help you today?',
+            'primary_color' => '#01B2D6',
+            'position' => 'bottom-right',
+            'show_on_pages' => 'all',
+            'specific_pages' => '',
+            'exclude_pages' => '',
+        );
+    }
+
+    // Server-side message handler for secure webhook communication
+    public function handle_chat_message() {
+        // Check if this is a legitimate request (prevents hackers)
+        if (!wp_verify_nonce($_POST['nonce'], 'cosentus_chat_nonce_v2')) {
+            wp_die('Security check failed');
+        }
+        
+        // Clean the user's message (remove dangerous code)
+        $message = sanitize_textarea_field($_POST['message']);
+        $session_id = sanitize_text_field($_POST['session_id']);
+        
+        // Don't allow empty messages or super long ones
+        if (empty($message) || strlen($message) > 1000) {
+            wp_send_json_error('Invalid message');
+            return;
+        }
+        
+        // Rate limiting: only 10 messages per minute per user
+        $user_ip = $_SERVER['REMOTE_ADDR'];
+        $rate_key = 'chatbot_limit_v2_' . md5($user_ip);
+        $message_count = get_transient($rate_key) ?: 0;
+        
+        if ($message_count >= 10) {
+            wp_send_json_error('Too many messages. Please wait a minute.');
+            return;
+        }
+        
+        // Get the webhook URL from admin settings (hidden from public)
+        $webhook_url = $this->options['webhook_url'];
+        
+        if (empty($webhook_url)) {
+            wp_send_json_error('Chatbot not configured');
+            return;
+        }
+        
+        // Send to n8n (server-to-server, hidden from users)
+        $response = wp_remote_post($webhook_url, [
+            'body' => wp_json_encode([
+                'message' => $message,
+                'sessionId' => $session_id,
+                'timestamp' => current_time('mysql'),
+                'source' => 'wordpress-chatbot-v2'
+            ]),
+            'headers' => [
+                'Content-Type' => 'application/json'
+            ],
+            'timeout' => 30
+        ]);
+        
+        // Update rate limit counter
+        set_transient($rate_key, $message_count + 1, 60); // 60 seconds
+        
+        // Check if n8n responded properly
+        if (is_wp_error($response)) {
+            error_log('Cosentus Chat Error - WP Error: ' . $response->get_error_message());
+            wp_send_json_error('Service temporarily unavailable');
+            return;
+        }
+        
+        // Debug: Check response status and headers
+        $response_code = wp_remote_retrieve_response_code($response);
+        $response_headers = wp_remote_retrieve_headers($response);
+        
+        $body = wp_remote_retrieve_body($response);
+        
+        // DEBUG: Log response details
+        error_log('Cosentus Chat Debug - Response Code: ' . $response_code);
+        error_log('Cosentus Chat Debug - Response Body Length: ' . strlen($body));
+        error_log('Cosentus Chat Debug - First 500 chars of body: ' . substr($body, 0, 500));
+        
+        // Check for non-200 response codes
+        if ($response_code !== 200) {
+            error_log('Cosentus Chat Error - Non-200 response code: ' . $response_code);
+            error_log('Cosentus Chat Error - Full response body: ' . $body);
+            wp_send_json_error('Service responded with error: ' . $response_code);
+            return;
+        }
+        
+        // For "Respond to Webhook" node, the response is sent directly as the body
+        // First try to decode as JSON, but if that fails, use the raw body
+        $data = json_decode($body, true);
+        
+        $ai_response = '';
+        
+        if (json_last_error() === JSON_ERROR_NONE) {
+            // Valid JSON response - handle n8n AI Agent output format
+            error_log('Cosentus Chat Debug - Valid JSON, processing...');
+            
+            // Check if it's an array first (your format: [{"output": "text"}])
+            if (is_array($data) && !empty($data)) {
+                error_log('Cosentus Chat Debug - Array detected with ' . count($data) . ' items');
+                $first_item = $data[0];
+                if (is_array($first_item)) {
+                    error_log('Cosentus Chat Debug - First item is array: ' . json_encode($first_item));
+                    if (isset($first_item['output'])) {
+                        $ai_response = $first_item['output'];
+                        error_log('Cosentus Chat Debug - Found output: ' . $ai_response);
+                    } elseif (isset($first_item['message'])) {
+                        $ai_response = $first_item['message'];
+                        error_log('Cosentus Chat Debug - Found message: ' . $ai_response);
+                    } elseif (isset($first_item['response'])) {
+                        $ai_response = $first_item['response'];
+                        error_log('Cosentus Chat Debug - Found response: ' . $ai_response);
+                    } elseif (isset($first_item['text'])) {
+                        $ai_response = $first_item['text'];
+                        error_log('Cosentus Chat Debug - Found text: ' . $ai_response);
+                    } else {
+                        $ai_response = 'Response format not recognized: ' . json_encode($data);
+                        error_log('Cosentus Chat Debug - No recognized field in array item');
+                    }
+                } else {
+                    $ai_response = $first_item; // Direct string in array
+                    error_log('Cosentus Chat Debug - Using direct string from array: ' . $ai_response);
+                }
+            } elseif (isset($data['message'])) {
+                // This is our expected format: {"message": "AI response"}
+                $ai_response = $data['message'];
+                error_log('Cosentus Chat Debug - Found direct message field: ' . $ai_response);
+            } elseif (isset($data['output'])) {
+                // Direct AI Agent output format
+                $ai_response = $data['output'];
+                error_log('Cosentus Chat Debug - Found direct output field: ' . $ai_response);
+            } elseif (isset($data['response'])) {
+                // Alternative response field
+                $ai_response = $data['response'];
+                error_log('Cosentus Chat Debug - Found direct response field: ' . $ai_response);
+            } elseif (isset($data['text'])) {
+                // Alternative text field
+                $ai_response = $data['text'];
+                error_log('Cosentus Chat Debug - Found direct text field: ' . $ai_response);
+            } elseif (is_string($data)) {
+                // Direct string response
+                $ai_response = $data;
+                error_log('Cosentus Chat Debug - Using direct string: ' . $ai_response);
+            } else {
+                $ai_response = 'Response format not recognized: ' . json_encode($data);
+                error_log('Cosentus Chat Debug - No recognized format, data type: ' . gettype($data));
+            }
+        } else {
+            // Not JSON or failed to decode - use raw response body
+            // This is common with "Respond to Webhook" node
+            error_log('Cosentus Chat Debug - JSON decode failed, using raw body');
+            $ai_response = trim($body);
+            
+            // If it's empty, provide fallback
+            if (empty($ai_response)) {
+                $ai_response = 'Thank you for your message. I received it successfully!';
+                error_log('Cosentus Chat Debug - Empty response, using fallback');
+            } else {
+                error_log('Cosentus Chat Debug - Using raw body: ' . substr($ai_response, 0, 100) . '...');
+            }
+        }
+        
+        error_log('Cosentus Chat Debug - Final AI Response: ' . $ai_response);
+        
+        // Send clean response back to user
+        wp_send_json_success([
+            'message' => sanitize_textarea_field($ai_response)
+        ]);
+    }
+    
+    public function add_inline_styles() {
+        if (!$this->should_show_chatbot()) {
+            return;
+        }
+        
+        echo '<style type="text/css">
+/* Cosentus AI Chatbot Widget - Inline CSS */
+.cosentus-chatbot * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.cosentus-chatbot {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 999999;
+    font-family: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.cosentus-chat-button {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 20px rgba(1, 178, 214, 1.0);
+    font-size: 1.5rem;
+    color: ' . esc_attr($this->options['primary_color']) . ';
+}
+
+.cosentus-chat-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(1, 178, 214, 1.0);
+}
+
+.cosentus-chat-button .v-arrow {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-arrow-down {
+    width: 14px;
+    height: 14px;
+    border-right: 2px solid ' . esc_attr($this->options['primary_color']) . ';
+    border-bottom: 2px solid ' . esc_attr($this->options['primary_color']) . ';
+    transform: rotate(45deg);
+    margin-top: -2px;
+}
+
+.cosentus-chat-button.chat-open .fa-comments {
+    display: none;
+}
+
+.cosentus-chat-button.chat-open .v-arrow {
+    display: flex;
+}
+
+.cosentus-chat-pulse {
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    opacity: 0.7;
+    animation: cosentus-pulse 2s infinite;
+}
+
+@keyframes cosentus-pulse {
+    0% { transform: scale(1); opacity: 0.7; }
+    70% { transform: scale(1.2); opacity: 0; }
+    100% { transform: scale(1.2); opacity: 0; }
+}
+
+.cosentus-chat-window {
+    position: absolute;
+    bottom: 80px;
+    right: 0;
+    width: 350px;
+    height: 600px;
+    background: #FFFFFF;
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    display: none;
+    flex-direction: column;
+    animation: cosentus-slideUp 0.3s ease;
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+@keyframes cosentus-slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) translateZ(0);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) translateZ(0);
+    }
+}
+
+@keyframes cosentus-slideDown {
+    from {
+        opacity: 1;
+        transform: translateY(0) translateZ(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(20px) translateZ(0);
+    }
+}
+
+.cosentus-chat-window.slide-down {
+    animation: cosentus-slideDown 0.3s ease;
+    animation-fill-mode: forwards;
+}
+
+.cosentus-chat-header {
+    position: relative;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-radius: 16px 16px 0 0;
+    background: #000000;
+}
+
+.cosentus-chat-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    flex: 1;
+    padding-left: 0.15rem;
+    padding-top: 0.15rem;
+}
+
+.cosentus-chat-close {
+    position: absolute !important;
+    top: 12px !important;
+    right: 12px !important;
+    background: transparent !important;
+    border: none !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    cursor: pointer !important;
+    font-size: 20px !important;
+    padding: 6px !important;
+    margin: 0 !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    height: auto !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    text-decoration: none !important;
+    font-weight: 200 !important;
+    font-family: "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    line-height: 1 !important;
+}
+
+.cosentus-menu-dots {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.cosentus-menu-dots .dot {
+    width: 4px !important;
+    height: 4px !important;
+    background-color: #FFFFFF !important;
+    border-radius: 50% !important;
+    transition: all 0.3s ease !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.cosentus-chat-close:hover .cosentus-menu-dots .dot {
+    background-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.cosentus-chat-messages {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+    background: #FFFFFF;
+}
+
+.cosentus-chat-messages::-webkit-scrollbar {
+    width: 4px;
+}
+
+.cosentus-chat-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.cosentus-chat-messages::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+}
+
+.cosentus-message {
+    display: flex;
+    margin-bottom: 0.5rem;
+    position: relative;
+    max-width: 85%;
+    animation: cosentus-messageSlide 0.3s ease;
+}
+
+.cosentus-message.bot-message {
+    align-self: flex-start;
+}
+
+.cosentus-message.user-message {
+    align-self: flex-end;
+    margin-left: auto;
+}
+
+@keyframes cosentus-messageSlide {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.cosentus-message-content {
+    padding: 0.8rem 1.1rem;
+    border-radius: 20px;
+    position: relative;
+    word-wrap: break-word;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    max-width: 100%;
+}
+
+.cosentus-message.bot-message .cosentus-message-content {
+    background: #EBEBEB;
+    color: #000000;
+}
+
+.cosentus-message.user-message .cosentus-message-content {
+    background: #000000;
+    color: #ffffff;
+}
+
+.cosentus-message-content p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.cosentus-agent-title {
+    font-size: .92rem !important;
+    margin-bottom: 0.2rem !important;
+    color: #000000 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.08rem !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    margin-left: -4px !important;
+}
+
+.cosentus-agent-logo {
+    width: 32px !important;
+    height: 32px !important;
+    object-fit: contain !important;
+    border-radius: 50% !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: inline-block !important;
+}
+
+.cosentus-chat-input-area {
+    padding: 1rem;
+    border-radius: 0 0 16px 16px;
+    background: #FFFFFF;
+}
+
+.cosentus-chat-disclaimer {
+    text-align: center !important;
+    font-size: 11px !important;
+    color: #999999 !important;
+    margin-top: 8px !important;
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+    line-height: 1.2 !important;
+    font-family: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+.cosentus-chat-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.cosentus-chat-input {
+    width: 100% !important;
+    background: #FFFFFF !important;
+    border: 1px solid rgba(0, 0, 0, 0.2) !important;
+    border-radius: 24px !important;
+    padding: 1rem 3.5rem 1rem 1rem !important;
+    color: #000000 !important;
+    font-size: 0.85rem !important;
+    transition: all 0.3s ease !important;
+    resize: none !important;
+    outline: none !important;
+    min-height: 24px !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+}
+
+.cosentus-chat-input::placeholder {
+    color: rgba(0, 0, 0, 0.5) !important;
+}
+
+.cosentus-chat-input:focus {
+    background: #FFFFFF !important;
+    border-color: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(0, 0, 0, 0.3) !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.cosentus-chat-send {
+    position: absolute !important;
+    right: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 32px !important;
+    height: 32px !important;
+    background: rgba(0, 0, 0, 0.1) !important;
+    border: none !important;
+    border-radius: 50% !important;
+    color: #000000 !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.3s ease !important;
+    font-size: 0.9rem !important;
+    box-shadow: none !important;
+    outline: none !important;
+    text-decoration: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.cosentus-chat-send:hover {
+    background: rgba(0, 0, 0, 0.2) !important;
+    transform: translateY(-50%) !important;
+    box-shadow: none !important;
+}
+
+.cosentus-chat-send:disabled {
+    opacity: 0.3 !important;
+    cursor: not-allowed !important;
+    transform: translateY(-50%) scale(1) !important;
+}
+
+.cosentus-chat-close:hover {
+    color: rgba(255, 255, 255, 1) !important;
+    background: transparent !important;
+    transform: none !important;
+}
+
+.cosentus-chat-close i {
+    font-weight: 300 !important;
+    font-size: 12px !important;
+}
+
+.cosentus-loading-dots {
+    display: flex;
+    gap: 0.3rem;
+    padding: 0.5rem 0;
+}
+
+.cosentus-loading-dots span {
+    width: 8px;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    animation: cosentus-loadingDots 1.4s ease-in-out infinite both;
+}
+
+.cosentus-loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+.cosentus-loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+.cosentus-loading-dots span:nth-child(3) { animation-delay: 0s; }
+
+@keyframes cosentus-loadingDots {
+    0%, 80%, 100% { 
+        transform: scale(0.8); 
+        opacity: 0.5; 
+    }
+    40% { 
+        transform: scale(1.2); 
+        opacity: 1; 
+    }
+}
+
+@keyframes cosentus-fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.cosentus-message.fade-in {
+    animation: cosentus-fadeInUp 0.4s ease-out;
+}
+
+.cosentus-drag-cursor {
+    cursor: move;
+}
+
+.cosentus-drag-cursor-grabbing {
+    cursor: grabbing;
+}
+
+.cosentus-message-content a {
+    color: #0066cc !important;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.cosentus-message-content a:visited {
+    color: #0066cc !important;
+}
+
+.cosentus-message-content a:hover {
+    color: #004499 !important;
+    text-decoration: underline;
+}
+
+.cosentus-chat-logo {
+    max-height: 40px;
+    width: auto;
+    max-width: 160px;
+    object-fit: contain;
+    margin-bottom: 0.25rem;
+    filter: brightness(1.1);
+}
+
+.cosentus-think-growth-text {
+    font-family: "Montserrat", sans-serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 0.75rem;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 0.25rem;
+    opacity: 0.9;
+}
+
+/* Enhanced Mobile Responsive Styles */
+@media (max-width: 768px) {
+    .cosentus-chatbot {
+        bottom: 10px !important;
+        right: 10px !important;
+        /* Remove left positioning to keep button on the right */
+    }
+    
+    .cosentus-chat-window {
+        position: fixed !important;
+        bottom: 70px !important;
+        left: 10px !important;
+        right: 10px !important;
+        width: auto !important;
+        max-width: none !important;
+        height: 70vh !important;
+        max-height: 600px !important;
+        min-height: 400px !important;
+    }
+    
+    .cosentus-chat-button {
+        width: 55px !important;
+        height: 55px !important;
+        font-size: 1.3rem !important;
+    }
+    
+    .cosentus-chat-header {
+        padding: 0.75rem 1rem !important;
+    }
+    
+    .cosentus-chat-logo {
+        max-height: 35px !important;
+        max-width: 140px !important;
+    }
+    
+    .cosentus-think-growth-text {
+        font-size: 0.7rem !important;
+    }
+    
+    .cosentus-chat-messages {
+        padding: 0.75rem !important;
+    }
+    
+    .cosentus-chat-input-area {
+        padding: 0.75rem !important;
+    }
+    
+    .cosentus-chat-input {
+        font-size: 16px !important; /* Prevents zoom on iOS */
+        padding: 12px 50px 12px 16px !important;
+    }
+    
+    .cosentus-chat-send {
+        width: 36px !important;
+        height: 36px !important;
+        right: 8px !important;
+    }
+    
+    .cosentus-chat-close {
+        top: 10px !important;
+        right: 10px !important;
+        width: 30px !important;
+        height: 30px !important;
+        font-size: 16px !important;
+    }
+    
+    .cosentus-chat-disclaimer {
+        font-size: 10px !important;
+        margin-top: 6px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .cosentus-chat-window {
+        height: 75vh !important;
+        min-height: 350px !important;
+        bottom: 65px !important;
+    }
+    
+    .cosentus-chat-button {
+        width: 50px !important;
+        height: 50px !important;
+        font-size: 1.2rem !important;
+    }
+    
+    .cosentus-chat-header {
+        padding: 0.5rem 0.75rem !important;
+    }
+    
+    .cosentus-chat-logo {
+        max-height: 30px !important;
+        max-width: 120px !important;
+    }
+    
+    .cosentus-think-growth-text {
+        font-size: 0.65rem !important;
+    }
+    
+    .cosentus-chat-messages {
+        padding: 0.5rem !important;
+        gap: 0.4rem !important;
+    }
+    
+    .cosentus-chat-input-area {
+        padding: 0.5rem !important;
+    }
+}
+</style>';
+    }
+    
+    public function enqueue_scripts() {
+        if (!$this->should_show_chatbot()) {
+            return;
+        }
+        
+        // Enqueue jQuery for compatibility with WordPress AJAX
+        wp_enqueue_script('jquery');
+        
+        // Enqueue Font Awesome
+        wp_enqueue_style('font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+        
+        // Enqueue Google Fonts
+        wp_enqueue_style('cosentus-fonts', 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&display=swap');
+    }
+    
+    public function render_chatbot() {
+        if (!$this->should_show_chatbot()) {
+            return;
+        }
+        
+        $config = array(
+            'companyName' => $this->options['company_name'],
+            'logoUrl' => $this->options['logo_url'],
+            'agentLogoUrl' => $this->options['agent_logo_url'],
+            'welcomeMessage' => $this->options['welcome_message'],
+            'primaryColor' => $this->options['primary_color'],
+            'position' => $this->options['position']
+        );
+        
+        ?>
+        <div class="cosentus-chatbot">
+            <div class="cosentus-chat-button">
+                <i class="fas fa-comments"></i>
+                <div class="v-arrow">
+                    <div class="custom-arrow-down"></div>
+                </div>
+                <div class="cosentus-chat-pulse"></div>
+            </div>
+            
+            <div class="cosentus-chat-window">
+                <div class="cosentus-chat-header">
+                    <div class="cosentus-chat-info">
+                        <img src="<?php echo esc_attr($config['logoUrl']); ?>" alt="<?php echo esc_attr($config['companyName']); ?> Logo" class="cosentus-chat-logo">
+                        <div class="cosentus-think-growth-text">THINK GROWTH</div>
+                    </div>
+                    <button class="cosentus-chat-close">
+                        ×
+                    </button>
+                </div>
+                
+                <div class="cosentus-chat-messages"></div>
+                
+                <div class="cosentus-chat-input-area">
+                    <div class="cosentus-chat-input-container">
+                        <input type="text" class="cosentus-chat-input" placeholder="Message..." />
+                        <button class="cosentus-chat-send">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="cosentus-chat-disclaimer">
+                        Powered by AI - Responses are informational only
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+        // Define AJAX variables for secure communication
+        window.cosentusAjaxV2 = {
+            ajaxurl: '<?php echo admin_url('admin-ajax.php'); ?>',
+            nonce: '<?php echo wp_create_nonce('cosentus_chat_nonce_v2'); ?>'
+        };
+        </script>
+        
+        <script>
+        (function() {
+            'use strict';
+            
+            // Ensure we have jQuery available
+            var $ = jQuery || window.jQuery;
+            
+            // Check if jQuery is available
+            if (typeof $ === 'undefined') {
+                console.error('Cosentus Chat V2: jQuery not loaded');
+                return;
+            }
+            
+            // Ensure AJAX variables are available
+            if (typeof cosentusAjaxV2 === 'undefined') {
+                console.error('Cosentus Chat V2: AJAX variables not loaded');
+                return;
+            }
+            
+            class CosentusChatbot {
+                constructor(config = {}) {
+                    this.config = Object.assign({
+                        position: 'bottom-right',
+                        logoUrl: '',
+                        agentLogoUrl: '',
+                        companyName: 'Cosentus',
+                        welcomeMessage: 'Welcome! How may I help you today?',
+                        primaryColor: '#01B2D6'
+                    }, config);
+                    
+                    this.isOpen = false;
+                    this.messages = [];
+                    this.isTyping = false;
+                    this.sessionId = null;
+                    
+                    this.init();
+                }
+                
+                init() {
+                    this.initializeElements();
+                    this.attachEventListeners();
+                    this.setupDragFunctionality();
+                    this.addMessage(this.config.welcomeMessage, 'bot');
+                }
+                
+                initializeElements() {
+                    this.chatButton = document.querySelector('.cosentus-chat-button');
+                    this.chatWindow = document.querySelector('.cosentus-chat-window');
+                    this.chatClose = document.querySelector('.cosentus-chat-close');
+                    this.chatInput = document.querySelector('.cosentus-chat-input');
+                    this.chatSend = document.querySelector('.cosentus-chat-send');
+                    this.chatMessages = document.querySelector('.cosentus-chat-messages');
+                }
+                
+                attachEventListeners() {
+                    this.chatButton.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.toggleChat();
+                    });
+                    this.chatClose.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.closeChat();
+                    });
+                    this.chatSend.addEventListener('click', () => this.sendMessage());
+                    this.chatInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            this.sendMessage();
+                        }
+                    });
+                    this.chatInput.addEventListener('input', () => this.handleTyping());
+                    
+                    // Delay the document click listener to avoid immediate conflicts
+                    setTimeout(() => {
+                        document.addEventListener('click', (e) => {
+                            if (!e.target.closest('.cosentus-chatbot') && this.isOpen) {
+                                this.closeChat();
+                            }
+                        });
+                    }, 100);
+                    
+                    document.addEventListener('keydown', (e) => {
+                        if (e.key === 'Escape' && this.isOpen) {
+                            this.closeChat();
+                        }
+                    });
+                }
+                
+                toggleChat() {
+                    if (this.isOpen) {
+                        this.closeChat();
+                    } else {
+                        this.openChat();
+                    }
+                }
+                
+                openChat() {
+                    this.chatWindow.classList.remove('slide-down');
+                    this.chatWindow.style.display = 'flex';
+                    this.isOpen = true;
+                    this.chatWindow.offsetHeight;
+                    
+                    const pulse = document.querySelector('.cosentus-chat-pulse');
+                    if (pulse) pulse.style.display = 'none';
+                    
+                    this.chatButton.classList.add('chat-open');
+                    
+                    setTimeout(() => {
+                        this.chatInput.focus();
+                    }, 320);
+                    
+                    this.trackEvent('chat_opened');
+                }
+                
+                closeChat() {
+                    if (!this.isOpen) return;
+                    
+                    this.isOpen = false;
+                    this.chatButton.classList.remove('chat-open');
+                    const pulse = document.querySelector('.cosentus-chat-pulse');
+                    if (pulse) pulse.style.display = 'block';
+                    
+                    this.chatWindow.classList.add('slide-down');
+                    
+                    const handleAnimationEnd = () => {
+                        this.chatWindow.style.display = 'none';
+                        this.chatWindow.classList.remove('slide-down');
+                        this.chatWindow.removeEventListener('animationend', handleAnimationEnd);
+                    };
+                    
+                    this.chatWindow.addEventListener('animationend', handleAnimationEnd);
+                    
+                    setTimeout(() => {
+                        if (this.chatWindow.classList.contains('slide-down')) {
+                            handleAnimationEnd();
+                        }
+                    }, 350);
+                    
+                    this.trackEvent('chat_closed');
+                }
+                
+                setupDragFunctionality() {
+                    let isDragging = false;
+                    let dragOffset = { x: 0, y: 0 };
+                    
+                    const chatHeader = this.chatWindow.querySelector('.cosentus-chat-header');
+                    chatHeader.classList.add('cosentus-drag-cursor');
+                    chatHeader.style.userSelect = 'none';
+                    
+                    const startDrag = (e) => {
+                        if (e.target.closest('.cosentus-chat-close')) return;
+                        
+                        isDragging = true;
+                        const rect = this.chatWindow.getBoundingClientRect();
+                        dragOffset.x = e.clientX - rect.left;
+                        dragOffset.y = e.clientY - rect.top;
+                        
+                        document.addEventListener('mousemove', handleDrag);
+                        document.addEventListener('mouseup', stopDrag);
+                        
+                        document.body.style.userSelect = 'none';
+                        chatHeader.classList.remove('cosentus-drag-cursor');
+                        chatHeader.classList.add('cosentus-drag-cursor-grabbing');
+                    };
+                    
+                    const handleDrag = (e) => {
+                        if (!isDragging) return;
+                        
+                        e.preventDefault();
+                        
+                        let newLeft = e.clientX - dragOffset.x;
+                        let newTop = e.clientY - dragOffset.y;
+                        
+                        const windowWidth = window.innerWidth;
+                        const windowHeight = window.innerHeight;
+                        const chatWidth = this.chatWindow.offsetWidth;
+                        const chatHeight = this.chatWindow.offsetHeight;
+                        
+                        newLeft = Math.max(10, Math.min(newLeft, windowWidth - chatWidth - 10));
+                        newTop = Math.max(10, Math.min(newTop, windowHeight - chatHeight - 10));
+                        
+                        this.chatWindow.style.position = 'fixed';
+                        this.chatWindow.style.left = newLeft + 'px';
+                        this.chatWindow.style.top = newTop + 'px';
+                        this.chatWindow.style.right = 'auto';
+                        this.chatWindow.style.bottom = 'auto';
+                    };
+                    
+                    const stopDrag = () => {
+                        isDragging = false;
+                        document.removeEventListener('mousemove', handleDrag);
+                        document.removeEventListener('mouseup', stopDrag);
+                        
+                        document.body.style.userSelect = '';
+                        chatHeader.classList.remove('cosentus-drag-cursor-grabbing');
+                        chatHeader.classList.add('cosentus-drag-cursor');
+                    };
+                    
+                    chatHeader.addEventListener('mousedown', startDrag);
+                }
+
+                async sendMessage() {
+                    const message = this.chatInput.value.trim();
+                    if (!message || this.isTyping) return;
+                    
+                    this.addMessage(message, 'user');
+                    this.chatInput.value = '';
+                    
+                    // Delay typing indicator by 1 second for better UX
+                    setTimeout(() => {
+                        this.showTypingIndicator();
+                    }, 1000);
+                    
+                    try {
+                        const response = await this.callWebhook(message);
+                        this.hideTypingIndicator();
+                        
+                        setTimeout(() => {
+                            this.addMessage(response, 'bot');
+                        }, 500);
+                        
+                        this.trackEvent('message_sent', { message: message });
+                        
+                    } catch (error) {
+                        console.error('Chat error:', error);
+                        console.error('Error details:', {
+                            message: error.message,
+                            stack: error.stack,
+                            name: error.name
+                        });
+                        this.hideTypingIndicator();
+                        
+                        setTimeout(() => {
+                            this.addMessage(
+                                "I apologize, but I'm currently experiencing technical difficulties. Please try again later or contact our support team directly.",
+                                'bot'
+                            );
+                        }, 500);
+                        
+                        this.trackEvent('message_error', { error: error.message });
+                    }
+                }
+                
+                async callWebhook(message) {
+                    // Use jQuery for better compatibility with WordPress
+                    try {
+                        const response = await $.ajax({
+                            url: cosentusAjaxV2.ajaxurl,
+                            type: 'POST',
+                            data: {
+                                action: 'cosentus_chat_message_v2',
+                                nonce: cosentusAjaxV2.nonce,
+                                message: message,
+                                session_id: this.getSessionId()
+                            },
+                            timeout: 30000
+                        });
+                        
+                        if (!response.success) {
+                            throw new Error(response.data || 'Request failed');
+                        }
+                        
+                        return response.data.message;
+                        
+                    } catch (error) {
+                        console.error('AJAX Error Details:', {
+                            message: error.message,
+                            status: error.status,
+                            statusText: error.statusText,
+                            responseText: error.responseText,
+                            readyState: error.readyState
+                        });
+                        throw error;
+                    }
+                }
+                
+                addMessage(text, sender) {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `cosentus-message ${sender}-message`;
+                    
+                    // Add smooth fade-in animation for bot messages
+                    if (sender === 'bot') {
+                        messageDiv.classList.add('fade-in');
+                    }
+                    
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'cosentus-message-content';
+                    
+                    if (sender === 'bot') {
+                        // Cosentus Lion image
+                        const lionImageUrl = 'https://cosentus.com/wp-content/uploads/2025/09/lion_transparent.png';
+                        contentDiv.innerHTML = `
+                            <div class="cosentus-agent-title">
+                                <img src="${lionImageUrl}" alt="Cosentus Lion" class="cosentus-agent-logo">
+                                ${this.config.companyName} AI Agent
+                            </div>
+                            <p>${this.formatMessage(text)}</p>
+                        `;
+                    } else {
+                        contentDiv.innerHTML = `<p>${this.formatMessage(text)}</p>`;
+                    }
+                    
+                    messageDiv.appendChild(contentDiv);
+                    this.chatMessages.appendChild(messageDiv);
+                    this.scrollToBottom();
+                    
+                    this.messages.push({
+                        text: text,
+                        sender: sender,
+                        timestamp: new Date()
+                    });
+                }
+                
+                formatMessage(text) {
+                    let formatted = text
+                        // Handle bold and italic formatting
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                        
+                        // Convert double newlines to paragraph breaks (better spacing)
+                        .replace(/\n\n/g, '<br><br>')
+                        // Convert single newlines to line breaks
+                        .replace(/\n/g, '<br>')
+                        
+                        // Format bullet points with proper spacing and indentation
+                        .replace(/•\s*/g, '<br>&nbsp;&nbsp;• ')
+                        
+                        // Format section headers (lines ending with colon)
+                        .replace(/<br>([^<]*:)<br>/g, '<br><strong>$1</strong><br>')
+                        
+                        // Format numbered lists (1. 2. 3. etc.)
+                        .replace(/(\d+)\.\s*/g, '<br>&nbsp;&nbsp;$1. ')
+                        
+                        // Clean up any leading line breaks
+                        .replace(/^<br>/, '')
+                        .replace(/^&nbsp;&nbsp;/, '');
+                    
+                    // Handle links (markdown style and plain URLs)
+                    formatted = formatted.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+                    formatted = formatted.replace(/(^|[^"'>])(https?:\/\/[^\s<>"']+)/gi, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+                    
+                    return formatted;
+                }
+                
+                showTypingIndicator() {
+                    this.isTyping = true;
+                    this.chatSend.disabled = true;
+                    
+                    const typingDiv = document.createElement('div');
+                    typingDiv.className = 'cosentus-message bot-message cosentus-typing-indicator';
+                    const lionImageUrl = 'https://cosentus.com/wp-content/uploads/2025/09/lion_transparent.png';
+                    typingDiv.innerHTML = `
+                        <div class="cosentus-message-content">
+                            <div class="cosentus-agent-title">
+                                <img src="${lionImageUrl}" alt="Cosentus Lion" class="cosentus-agent-logo">
+                                ${this.config.companyName} AI Agent
+                            </div>
+                            <div class="cosentus-loading-dots">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    this.chatMessages.appendChild(typingDiv);
+                    this.scrollToBottom();
+                }
+                
+                hideTypingIndicator() {
+                    this.isTyping = false;
+                    this.chatSend.disabled = false;
+                    
+                    const typingIndicator = this.chatMessages.querySelector('.cosentus-typing-indicator');
+                    if (typingIndicator) {
+                        typingIndicator.remove();
+                    }
+                }
+                
+                handleTyping() {
+                    this.chatSend.disabled = !this.chatInput.value.trim() || this.isTyping;
+                }
+                
+                scrollToBottom() {
+                    this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+                }
+                
+                getUserId() {
+                    let userId = localStorage.getItem('cosentus_chatUserId');
+                    if (!userId) {
+                        userId = 'user_' + Math.random().toString(36).substr(2, 9);
+                        localStorage.setItem('cosentus_chatUserId', userId);
+                    }
+                    return userId;
+                }
+                
+                getSessionId() {
+                    if (!this.sessionId) {
+                        // Generate or retrieve persistent session ID for conversation continuity
+                        let persistentSessionId = localStorage.getItem('cosentus_session_id_v2');
+                        if (!persistentSessionId) {
+                            persistentSessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                            localStorage.setItem('cosentus_session_id_v2', persistentSessionId);
+                        }
+                        this.sessionId = persistentSessionId;
+                    }
+                    return this.sessionId;
+                }
+                
+                trackEvent(eventName, properties = {}) {
+                    
+                    // Google Analytics 4 integration
+                    if (typeof gtag !== 'undefined') {
+                        gtag('event', eventName, {
+                            event_category: 'cosentus_chat',
+                            ...properties
+                        });
+                    }
+                    
+                    // WordPress analytics hook
+                    if (typeof wp !== 'undefined' && wp.hooks) {
+                        wp.hooks.doAction('cosentus_chat_event', eventName, properties);
+                    }
+                }
+                
+                open() {
+                    this.openChat();
+                }
+                
+                close() {
+                    this.closeChat();
+                }
+                
+                sendBotMessage(message) {
+                    this.addMessage(message, 'bot');
+                }
+                
+                clearMessages() {
+                    this.chatMessages.innerHTML = '';
+                    this.messages = [];
+                    this.addMessage(this.config.welcomeMessage, 'bot');
+                }
+            }
+            
+            // Initialize when everything is ready - enhanced WordPress compatibility
+            function initChatbot() {
+                // Check if already initialized
+                if (window.cosentusChatbot) {
+                    return;
+                }
+                
+                // Double check that DOM elements exist
+                const button = document.querySelector('.cosentus-chat-button');
+                if (!button) {
+                    // Try again in 500ms
+                    setTimeout(initChatbot, 500);
+                    return;
+                }
+                
+                try {
+                    // Initialize the chatbot
+                    window.cosentusChatbot = new CosentusChatbot(<?php echo wp_json_encode($config); ?>);
+                } catch (error) {
+                    console.error('Cosentus Chat: Initialization failed', error);
+                }
+                
+                // Backup click handler disabled to prevent conflicts
+                // setTimeout(() => {
+                //     const testButton = document.querySelector('.cosentus-chat-button');
+                //     if (testButton && window.cosentusChatbot) {
+                //         console.log('Cosentus Chat V2: Adding backup click handler');
+                //         testButton.onclick = function(e) {
+                //             console.log('Cosentus Chat V2: Backup click handler triggered');
+                //             e.preventDefault();
+                //             e.stopPropagation();
+                //             if (window.cosentusChatbot && window.cosentusChatbot.toggleChat) {
+                //                 window.cosentusChatbot.toggleChat();
+                //             }
+                //         };
+                //     }
+                // }, 1000);
+            }
+            
+            // Multiple initialization strategies for compatibility
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initChatbot);
+            } else {
+                // DOM already loaded
+                initChatbot();
+            }
+            
+            // Fallback with jQuery
+            $(document).ready(function() {
+                setTimeout(initChatbot, 200);
+            });
+            
+        })();
+        </script>
+        <?php
+    }
+    
+    private function should_show_chatbot() {
+        if (!$this->options['enabled']) {
+            return false;
+        }
+        
+        $show_on = $this->options['show_on_pages'];
+        $current_page_id = get_the_ID();
+        
+        if (!empty($this->options['exclude_pages'])) {
+            $exclude_pages = array_map('trim', explode(',', $this->options['exclude_pages']));
+            if (in_array($current_page_id, $exclude_pages)) {
+                return false;
+            }
+        }
+        
+        switch ($show_on) {
+            case 'home':
+                return is_front_page();
+            case 'specific':
+                if (!empty($this->options['specific_pages'])) {
+                    $specific_pages = array_map('trim', explode(',', $this->options['specific_pages']));
+                    return in_array($current_page_id, $specific_pages);
+                }
+                return false;
+            case 'all':
+            default:
+                return true;
+        }
+    }
+    
+    public function add_admin_menu() {
+        add_options_page(
+            'Cosentus Chatbot Settings',
+            'Cosentus Chatbot',
+            'manage_options',
+            'cosentus-chatbot',
+            array($this, 'admin_page')
+        );
+    }
+    
+    public function admin_init() {
+        register_setting('cosentus_chatbot_group', 'cosentus_chatbot_options');
+        
+        add_settings_section(
+            'cosentus_chatbot_main',
+            'Main Settings',
+            null,
+            'cosentus-chatbot'
+        );
+        
+        $fields = array(
+            'enabled' => 'Enable Chatbot',
+            'webhook_url' => 'N8N Webhook URL',
+            'company_name' => 'Company Name',
+            'logo_url' => 'Company Logo URL',
+            'agent_logo_url' => 'Agent Logo URL',
+            'welcome_message' => 'Welcome Message',
+            'primary_color' => 'Primary Color',
+            'position' => 'Position',
+            'show_on_pages' => 'Show On Pages',
+            'specific_pages' => 'Specific Page IDs (comma separated)',
+            'exclude_pages' => 'Exclude Page IDs (comma separated)',
+        );
+        
+        foreach ($fields as $field => $label) {
+            add_settings_field(
+                $field,
+                $label,
+                array($this, 'render_field'),
+                'cosentus-chatbot',
+                'cosentus_chatbot_main',
+                array('field' => $field, 'label' => $label)
+            );
+        }
+    }
+    
+    public function render_field($args) {
+        $field = $args['field'];
+        $value = isset($this->options[$field]) ? $this->options[$field] : '';
+        
+        switch ($field) {
+            case 'enabled':
+                echo '<input type="checkbox" name="cosentus_chatbot_options[' . $field . ']" value="1" ' . checked(1, $value, false) . ' />';
+                break;
+            case 'welcome_message':
+                echo '<textarea name="cosentus_chatbot_options[' . $field . ']" rows="3" cols="50">' . esc_textarea($value) . '</textarea>';
+                break;
+            case 'position':
+                $positions = array(
+                    'bottom-right' => 'Bottom Right',
+                    'bottom-left' => 'Bottom Left',
+                    'top-right' => 'Top Right',
+                    'top-left' => 'Top Left'
+                );
+                echo '<select name="cosentus_chatbot_options[' . $field . ']">';
+                foreach ($positions as $pos => $label) {
+                    echo '<option value="' . $pos . '" ' . selected($value, $pos, false) . '>' . $label . '</option>';
+                }
+                echo '</select>';
+                break;
+            case 'show_on_pages':
+                $options = array(
+                    'all' => 'All Pages',
+                    'home' => 'Home Page Only',
+                    'specific' => 'Specific Pages Only'
+                );
+                echo '<select name="cosentus_chatbot_options[' . $field . ']">';
+                foreach ($options as $opt => $label) {
+                    echo '<option value="' . $opt . '" ' . selected($value, $opt, false) . '>' . $label . '</option>';
+                }
+                echo '</select>';
+                break;
+            case 'primary_color':
+                echo '<input type="color" name="cosentus_chatbot_options[' . $field . ']" value="' . esc_attr($value) . '" />';
+                break;
+            case 'webhook_url':
+                echo '<input type="url" name="cosentus_chatbot_options[' . $field . ']" value="' . esc_attr($value) . '" size="50" placeholder="https://your-n8n-instance.com/webhook/..." />';
+                echo '<p class="description">Your n8n webhook URL (kept secure on server)</p>';
+                break;
+            default:
+                echo '<input type="text" name="cosentus_chatbot_options[' . $field . ']" value="' . esc_attr($value) . '" size="50" />';
+                break;
+        }
+    }
+    
+    public function admin_page() {
+        ?>
+        <div class="wrap">
+            <h1>Cosentus Chatbot Settings</h1>
+            <form method="post" action="options.php">
+                <?php
+                settings_fields('cosentus_chatbot_group');
+                do_settings_sections('cosentus-chatbot');
+                submit_button();
+                ?>
+            </form>
+        </div>
+        <?php
+    }
+}
+
+// Initialize the plugin
+global $cosentusChatbotV2Instance;
+$cosentusChatbotV2Instance = new CosentusChatbotV2();
+
+// Shortcode support
+function cosentus_chatbot_shortcode($atts) {
+    $atts = shortcode_atts(array(
+        'trigger_text' => 'Open Chat',
+        'trigger_class' => 'cosentus-chat-trigger-button'
+    ), $atts);
+    
+    return '<button class="' . esc_attr($atts['trigger_class']) . '" onclick="if(window.cosentusChatbot) window.cosentusChatbot.open()">' . 
+           esc_html($atts['trigger_text']) . '</button>';
+}
+add_shortcode('cosentus_chat_trigger', 'cosentus_chatbot_shortcode');
+
+// Only show chatbot if enabled - critical WordPress compatibility feature
+add_action('init', function() {
+    $options = get_option('cosentus_chatbot_options');
+    if ($options && !$options['enabled']) {
+        // Need to find a way to remove the action from the class instance
+        // This requires a different approach since we're using OOP
+        global $cosentusChatbotV2Instance;
+        if ($cosentusChatbotV2Instance) {
+            remove_action('wp_footer', array($cosentusChatbotV2Instance, 'render_chatbot'));
+        }
+    }
+});
+
+?>
