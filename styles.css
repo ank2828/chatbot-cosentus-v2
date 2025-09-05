@@ -893,16 +893,22 @@ body {
     color: #01B2D6;
 }
 
-/* Chat Widget */
-.chat-widget {
+/* Cosentus AI Chatbot Widget - Complete Styles */
+.cosentus-chatbot * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.cosentus-chatbot {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    z-index: 1000;
-    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    z-index: 999999;
+    font-family: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-.chat-button {
+.cosentus-chat-button {
     width: 60px;
     height: 60px;
     border-radius: 50%;
@@ -914,7 +920,7 @@ body {
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
-    box-shadow: 0 5px 20px rgba(1, 178, 214, 0.4);
+    box-shadow: 0 0 20px rgba(1, 178, 214, 1.0);
     font-size: 1.5rem;
     color: #01B2D6;
 }
@@ -1497,7 +1503,223 @@ a:hover {
 }
 
 /* Adjust chat info spacing for logo */
-.chat-info {
+/* Enhanced Mobile Responsive Styles */
+@media (max-width: 768px) {
+    .cosentus-chatbot {
+        bottom: 10px !important;
+        right: 10px !important;
+    }
+    
+    .cosentus-chat-window {
+        position: fixed !important;
+        bottom: 70px !important;
+        left: 10px !important;
+        right: 10px !important;
+        width: auto !important;
+        max-width: none !important;
+        height: 70vh !important;
+        max-height: 600px !important;
+        min-height: 400px !important;
+    }
+    
+    .cosentus-chat-button {
+        width: 55px !important;
+        height: 55px !important;
+        font-size: 1.3rem !important;
+    }
+    
+    .cosentus-chat-header {
+        padding: 0.75rem 1rem !important;
+    }
+    
+    .cosentus-chat-logo {
+        max-height: 35px !important;
+        max-width: 140px !important;
+    }
+    
+    .cosentus-think-growth-text {
+        font-size: 0.7rem !important;
+    }
+    
+    .cosentus-chat-messages {
+        padding: 0.75rem !important;
+    }
+    
+    .cosentus-chat-input-area {
+        padding: 0.75rem !important;
+    }
+    
+    .cosentus-chat-input {
+        font-size: 16px !important;
+        padding: 12px 50px 12px 16px !important;
+    }
+    
+    .cosentus-chat-send {
+        width: 36px !important;
+        height: 36px !important;
+        right: 8px !important;
+    }
+    
+    .cosentus-chat-close {
+        top: 10px !important;
+        right: 10px !important;
+        width: 30px !important;
+        height: 30px !important;
+        font-size: 16px !important;
+    }
+    
+    .cosentus-chat-disclaimer {
+        font-size: 10px !important;
+        margin-top: 6px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .cosentus-chat-window {
+        height: 75vh !important;
+        min-height: 350px !important;
+        bottom: 65px !important;
+    }
+    
+    .cosentus-chat-button {
+        width: 50px !important;
+        height: 50px !important;
+        font-size: 1.2rem !important;
+    }
+    
+    .cosentus-chat-header {
+        padding: 0.5rem 0.75rem !important;
+    }
+    
+    .cosentus-chat-logo {
+        max-height: 30px !important;
+        max-width: 120px !important;
+    }
+    
+    .cosentus-think-growth-text {
+        font-size: 0.65rem !important;
+    }
+    
+    .cosentus-chat-messages {
+        padding: 0.5rem !important;
+        gap: 0.4rem !important;
+    }
+    
+    .cosentus-chat-input-area {
+        padding: 0.5rem !important;
+    }
+}
+
+/* Additional Cosentus Chatbot Styles */
+.cosentus-chat-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(1, 178, 214, 1.0);
+}
+
+.cosentus-chat-button .v-arrow {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-arrow-down {
+    width: 14px;
+    height: 14px;
+    border-right: 2px solid #01B2D6;
+    border-bottom: 2px solid #01B2D6;
+    transform: rotate(45deg);
+    margin-top: -2px;
+}
+
+.cosentus-chat-button.chat-open .fa-comments {
+    display: none;
+}
+
+.cosentus-chat-button.chat-open .v-arrow {
+    display: flex;
+}
+
+.cosentus-chat-pulse {
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    opacity: 0.7;
+    animation: cosentus-pulse 2s infinite;
+}
+
+@keyframes cosentus-pulse {
+    0% { transform: scale(1); opacity: 0.7; }
+    70% { transform: scale(1.2); opacity: 0; }
+    100% { transform: scale(1.2); opacity: 0; }
+}
+
+.cosentus-chat-window {
+    position: absolute;
+    bottom: 80px;
+    right: 0;
+    width: 350px;
+    height: 600px;
+    background: #FFFFFF;
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    display: none;
+    flex-direction: column;
+    animation: cosentus-slideUp 0.3s ease;
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+@keyframes cosentus-slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px) translateZ(0);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) translateZ(0);
+    }
+}
+
+@keyframes cosentus-slideDown {
+    from {
+        opacity: 1;
+        transform: translateY(0) translateZ(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(20px) translateZ(0);
+    }
+}
+
+.cosentus-chat-window.slide-down {
+    animation: cosentus-slideDown 0.3s ease;
+    animation-fill-mode: forwards;
+}
+
+.cosentus-chat-header {
+    position: relative;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-radius: 16px 16px 0 0;
+    background: #000000;
+}
+
+.cosentus-chat-info {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -1507,10 +1729,310 @@ a:hover {
     padding-top: 0.15rem;
 }
 
-.chat-info p {
+.cosentus-chat-close {
+    position: absolute !important;
+    top: 12px !important;
+    right: 12px !important;
+    background: transparent !important;
+    border: none !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    cursor: pointer !important;
+    font-size: 20px !important;
+    padding: 6px !important;
+    margin: 0 !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    height: auto !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    text-decoration: none !important;
+    font-weight: 200 !important;
+    font-family: "Helvetica Neue", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    line-height: 1 !important;
+}
+
+.cosentus-chat-close:hover {
+    color: rgba(255, 255, 255, 1) !important;
+    background: transparent !important;
+    transform: none !important;
+}
+
+.cosentus-chat-messages {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+    background: #FFFFFF;
+}
+
+.cosentus-chat-messages::-webkit-scrollbar {
+    width: 4px;
+}
+
+.cosentus-chat-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.cosentus-chat-messages::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+}
+
+.cosentus-message {
+    display: flex;
+    margin-bottom: 0.5rem;
+    position: relative;
+    max-width: 85%;
+    animation: cosentus-messageSlide 0.3s ease;
+}
+
+.cosentus-message.bot-message {
+    align-self: flex-start;
+}
+
+.cosentus-message.user-message {
+    align-self: flex-end;
+    margin-left: auto;
+}
+
+@keyframes cosentus-messageSlide {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.cosentus-message-content {
+    padding: 0.8rem 1.1rem;
+    border-radius: 20px;
+    position: relative;
+    word-wrap: break-word;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    max-width: 100%;
+}
+
+.cosentus-message.bot-message .cosentus-message-content {
+    background: #EBEBEB;
+    color: #000000;
+}
+
+.cosentus-message.user-message .cosentus-message-content {
+    background: #000000;
+    color: #ffffff;
+}
+
+.cosentus-message-content p {
     margin: 0;
     font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.cosentus-agent-title {
+    font-size: .92rem !important;
+    margin-bottom: 0.2rem !important;
+    color: #000000 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.08rem !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    margin-left: -4px !important;
+}
+
+.cosentus-agent-logo {
+    width: 32px !important;
+    height: 32px !important;
+    object-fit: contain !important;
+    border-radius: 50% !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: inline-block !important;
+}
+
+.cosentus-chat-input-area {
+    padding: 1rem;
+    border-radius: 0 0 16px 16px;
+    background: #FFFFFF;
+}
+
+.cosentus-chat-disclaimer {
+    text-align: center !important;
+    font-size: 11px !important;
+    color: #999999 !important;
+    margin-top: 8px !important;
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+    line-height: 1.2 !important;
+    font-family: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+.cosentus-chat-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.cosentus-chat-input {
+    width: 100% !important;
+    background: #FFFFFF !important;
+    border: 1px solid rgba(0, 0, 0, 0.2) !important;
+    border-radius: 24px !important;
+    padding: 1rem 3.5rem 1rem 1rem !important;
+    color: #000000 !important;
+    font-size: 0.85rem !important;
+    transition: all 0.3s ease !important;
+    resize: none !important;
+    outline: none !important;
+    min-height: 24px !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+}
+
+.cosentus-chat-input::placeholder {
+    color: rgba(0, 0, 0, 0.5) !important;
+}
+
+.cosentus-chat-input:focus {
+    background: #FFFFFF !important;
+    border-color: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(0, 0, 0, 0.3) !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.cosentus-chat-send {
+    position: absolute !important;
+    right: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 32px !important;
+    height: 32px !important;
+    background: rgba(0, 0, 0, 0.1) !important;
+    border: none !important;
+    border-radius: 50% !important;
+    color: #000000 !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.3s ease !important;
+    font-size: 0.9rem !important;
+    box-shadow: none !important;
+    outline: none !important;
+    text-decoration: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.cosentus-chat-send:hover {
+    background: rgba(0, 0, 0, 0.2) !important;
+    transform: translateY(-50%) !important;
+    box-shadow: none !important;
+}
+
+.cosentus-chat-send:disabled {
+    opacity: 0.3 !important;
+    cursor: not-allowed !important;
+    transform: translateY(-50%) scale(1) !important;
+}
+
+.cosentus-loading-dots {
+    display: flex;
+    gap: 0.3rem;
+    padding: 0.5rem 0;
+}
+
+.cosentus-loading-dots span {
+    width: 8px;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    animation: cosentus-loadingDots 1.4s ease-in-out infinite both;
+}
+
+.cosentus-loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+.cosentus-loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+.cosentus-loading-dots span:nth-child(3) { animation-delay: 0s; }
+
+@keyframes cosentus-loadingDots {
+    0%, 80%, 100% { 
+        transform: scale(0.8); 
+        opacity: 0.5; 
+    }
+    40% { 
+        transform: scale(1.2); 
+        opacity: 1; 
+    }
+}
+
+@keyframes cosentus-fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.cosentus-message.fade-in {
+    animation: cosentus-fadeInUp 0.4s ease-out;
+}
+
+.cosentus-drag-cursor {
+    cursor: move;
+}
+
+.cosentus-drag-cursor-grabbing {
+    cursor: grabbing;
+}
+
+.cosentus-message-content a {
+    color: #0066cc !important;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.cosentus-message-content a:visited {
+    color: #0066cc !important;
+}
+
+.cosentus-message-content a:hover {
+    color: #004499 !important;
+    text-decoration: underline;
+}
+
+.cosentus-chat-logo {
+    max-height: 40px;
+    width: auto;
+    max-width: 160px;
+    object-fit: contain;
+    margin-bottom: 0.25rem;
+    filter: brightness(1.1);
+}
+
+.cosentus-think-growth-text {
+    font-family: "Montserrat", sans-serif;
+    font-style: italic;
     font-weight: 400;
-    opacity: 0.9;
+    font-size: 0.75rem;
     color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 0.25rem;
+    opacity: 0.9;
 }
